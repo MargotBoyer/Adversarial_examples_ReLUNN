@@ -1,0 +1,52 @@
+
+Gurobi 11.0.1 (win64) logging started Wed Nov 27 16:21:16 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 21 rows, 30 columns and 58 nonzeros
+Model fingerprint: 0x2616e1f6
+Coefficient statistics:
+  Matrix range     [5e-02, 2e+04]
+  Objective range  [1e-01, 6e-01]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e-01, 1e+04]
+Presolve removed 10 rows and 20 columns
+Presolve time: 0.00s
+Presolved: 11 rows, 10 columns, 39 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -1.0500000e+30   3.000000e+30   1.050000e+00      0s
+       6   -8.2869376e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 6 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -8.286937600e+03
+
+Gurobi 11.0.1 (win64) logging started Thu Nov 28 14:56:32 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 21 rows, 30 columns and 58 nonzeros
+Model fingerprint: 0x9338db2c
+Coefficient statistics:
+  Matrix range     [5e-02, 2e+04]
+  Objective range  [1e-01, 6e-01]
+  Bounds range     [1e+00, 2e+04]
+  RHS range        [1e-01, 1e+04]
+Presolve removed 10 rows and 20 columns
+Presolve time: 0.00s
+Presolved: 11 rows, 10 columns, 39 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -1.0500000e+30   3.000000e+30   1.050000e+00      0s
+       6   -8.2870297e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 6 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -8.287029656e+03

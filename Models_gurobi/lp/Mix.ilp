@@ -1,0 +1,20 @@
+\ Model Mix_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ R0: C0 <= 1.49
+ R3: C1 >= 3.54
+ R5: - 1.26 C0 + 2.67 C1 - C3 <= -2.38
+ R6: 3.98 C2 - 1.33 C3 - 1500 C8 >= -1501.91
+ R7: 5.51 C2 - 4.59 C3 - 1500 C9 >= -1498.58
+ R8: C8 + C9 >= 1
+ qc0: - 0.52 C2 + [ - 2.88 C0 * C2 + 0.84 C1 * C2 + C2 ^2 ] = 0
+Bounds
+ C0 free
+ C1 free
+ C2 free
+ C3 free
+Binaries
+ C8 C9
+End

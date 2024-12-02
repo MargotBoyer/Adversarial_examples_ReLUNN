@@ -1,0 +1,22 @@
+\ Model Glover_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ R0: C0 <= 1.49
+ R3: C1 >= 3.54
+ R8: - 2.88 C0 + 0.84 C1 + C2 + 1500 C10 <= 1500.52
+ R9: C2 - 1500 C10 <= 0
+ R10: - 1.26 C0 + 2.67 C1 - 1500 C11 <= -2.38
+ R12: 1.26 C0 - 2.67 C1 + C3 - 1500 C11 >= -1497.62
+ R16: C8 + C9 = 1
+ qc0: 1.91 C8 + [ 3.98 C2 * C8 - 1.33 C3 * C8 ] >= 0
+ qc1: - 1.42 C9 + [ 5.51 C2 * C9 - 4.59 C3 * C9 ] >= 0
+Bounds
+ C0 free
+ C1 free
+ C2 free
+ C3 free
+Binaries
+ C8 C9 C10 C11
+End

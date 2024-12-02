@@ -1,0 +1,227 @@
+
+Gurobi 11.0.1 (win64) logging started Wed Nov 27 16:18:08 2024
+
+Set parameter LogFile to value "F_ReLU1_Adv3.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 36 rows, 30 columns and 68 nonzeros
+Model fingerprint: 0x2eb463e2
+Model has 8 quadratic objective terms
+Model has 4 quadratic constraints
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+03]
+  QMatrix range    [6e-03, 8e-01]
+  QLMatrix range   [1e-01, 7e-01]
+  Objective range  [1e-01, 5e-01]
+  QObjective range [3e-01, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e-01, 2e+03]
+Presolve removed 24 rows and 13 columns
+
+Continuous model is non-convex -- solving as a MIP
+
+Presolve removed 28 rows and 19 columns
+Presolve time: 0.00s
+Presolved: 35 rows, 21 columns, 90 nonzeros
+Presolved model has 8 bilinear constraint(s)
+Warning: Model contains variables with very large bounds participating
+         in product terms.
+         Presolve was not able to compute smaller bounds for these variables.
+         Consider bounding these variables or reformulating the model.
+
+Variable types: 21 continuous, 0 integer (0 binary)
+Found heuristic solution: objective -824.8898839
+
+Root relaxation: objective -9.855789e+02, 20 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+     0     2 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+*    3     0               2    -824.8900000 -892.94864  8.25%   7.7    0s
+
+Explored 5 nodes (48 simplex iterations) in 0.03 seconds (0.00 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 2: -824.89 -824.89 
+No other solutions better than -824.89
+
+Optimal solution found (tolerance 1.00e-04)
+Warning: max constraint violation (5.3000e+00) exceeds tolerance
+Warning: max bound violation (5.3000e+00) exceeds tolerance
+Best objective -8.248900000000e+02, best bound -8.248900000000e+02, gap 0.0000%
+
+Gurobi 11.0.1 (win64) logging started Thu Nov 28 14:52:05 2024
+
+Set parameter LogFile to value "F_ReLU1_Adv3.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 36 rows, 30 columns and 68 nonzeros
+Model fingerprint: 0x071d69b0
+Model has 8 quadratic objective terms
+Model has 4 quadratic constraints
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+03]
+  QMatrix range    [6e-03, 8e-01]
+  QLMatrix range   [1e-01, 7e-01]
+  Objective range  [1e-01, 5e-01]
+  QObjective range [3e-01, 1e+00]
+  Bounds range     [1e+00, 2e+03]
+  RHS range        [1e-01, 2e+03]
+Presolve removed 24 rows and 13 columns
+
+Continuous model is non-convex -- solving as a MIP
+
+Presolve removed 28 rows and 19 columns
+Presolve time: 0.02s
+Presolved: 35 rows, 21 columns, 90 nonzeros
+Presolved model has 8 bilinear constraint(s)
+Warning: Model contains variables with very large bounds participating
+         in product terms.
+         Presolve was not able to compute smaller bounds for these variables.
+         Consider bounding these variables or reformulating the model.
+
+Variable types: 21 continuous, 0 integer (0 binary)
+Found heuristic solution: objective -824.8898840
+
+Root relaxation: objective -9.855789e+02, 19 iterations, 0.01 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+     0     2 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+*    3     0               2    -824.8900000 -892.94864  8.25%   7.0    0s
+
+Explored 5 nodes (45 simplex iterations) in 0.17 seconds (0.00 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 2: -824.89 -824.89 
+No other solutions better than -824.89
+
+Optimal solution found (tolerance 1.00e-04)
+Warning: max constraint violation (1.2330e+01) exceeds tolerance
+Warning: max bound violation (1.2330e+01) exceeds tolerance
+         (model may be infeasible or unbounded - try turning presolve off)
+Best objective -8.248900000000e+02, best bound -8.248900000000e+02, gap 0.0000%
+
+Gurobi 11.0.1 (win64) logging started Thu Nov 28 14:52:41 2024
+
+Set parameter LogFile to value "F_ReLU1_Adv3.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 36 rows, 30 columns and 68 nonzeros
+Model fingerprint: 0x071d69b0
+Model has 8 quadratic objective terms
+Model has 4 quadratic constraints
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+03]
+  QMatrix range    [6e-03, 8e-01]
+  QLMatrix range   [1e-01, 7e-01]
+  Objective range  [1e-01, 5e-01]
+  QObjective range [3e-01, 1e+00]
+  Bounds range     [1e+00, 2e+03]
+  RHS range        [1e-01, 2e+03]
+Presolve removed 24 rows and 13 columns
+
+Continuous model is non-convex -- solving as a MIP
+
+Presolve removed 28 rows and 19 columns
+Presolve time: 0.00s
+Presolved: 35 rows, 21 columns, 90 nonzeros
+Presolved model has 8 bilinear constraint(s)
+Warning: Model contains variables with very large bounds participating
+         in product terms.
+         Presolve was not able to compute smaller bounds for these variables.
+         Consider bounding these variables or reformulating the model.
+
+Variable types: 21 continuous, 0 integer (0 binary)
+Found heuristic solution: objective -824.8898840
+
+Root relaxation: objective -9.855789e+02, 19 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+     0     2 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+*    3     0               2    -824.8900000 -892.94864  8.25%   7.0    0s
+
+Explored 5 nodes (45 simplex iterations) in 0.04 seconds (0.00 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 2: -824.89 -824.89 
+No other solutions better than -824.89
+
+Optimal solution found (tolerance 1.00e-04)
+Warning: max constraint violation (1.2330e+01) exceeds tolerance
+Warning: max bound violation (1.2330e+01) exceeds tolerance
+         (model may be infeasible or unbounded - try turning presolve off)
+Best objective -8.248900000000e+02, best bound -8.248900000000e+02, gap 0.0000%
+
+Gurobi 11.0.1 (win64) logging started Thu Nov 28 14:53:20 2024
+
+Set parameter LogFile to value "F_ReLU1_Adv3.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 36 rows, 30 columns and 68 nonzeros
+Model fingerprint: 0x071d69b0
+Model has 8 quadratic objective terms
+Model has 4 quadratic constraints
+Coefficient statistics:
+  Matrix range     [1e-01, 2e+03]
+  QMatrix range    [6e-03, 8e-01]
+  QLMatrix range   [1e-01, 7e-01]
+  Objective range  [1e-01, 5e-01]
+  QObjective range [3e-01, 1e+00]
+  Bounds range     [1e+00, 2e+03]
+  RHS range        [1e-01, 2e+03]
+Presolve removed 24 rows and 13 columns
+
+Continuous model is non-convex -- solving as a MIP
+
+Presolve removed 28 rows and 19 columns
+Presolve time: 0.00s
+Presolved: 35 rows, 21 columns, 90 nonzeros
+Presolved model has 8 bilinear constraint(s)
+Warning: Model contains variables with very large bounds participating
+         in product terms.
+         Presolve was not able to compute smaller bounds for these variables.
+         Consider bounding these variables or reformulating the model.
+
+Variable types: 21 continuous, 0 integer (0 binary)
+Found heuristic solution: objective -824.8898840
+
+Root relaxation: objective -9.855789e+02, 19 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+     0     2 -985.57892    0    8 -824.88988 -985.57892  19.5%     -    0s
+*    3     0               2    -824.8900000 -892.94864  8.25%   7.0    0s
+
+Explored 5 nodes (45 simplex iterations) in 0.04 seconds (0.00 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 2: -824.89 -824.89 
+No other solutions better than -824.89
+
+Optimal solution found (tolerance 1.00e-04)
+Warning: max constraint violation (1.2330e+01) exceeds tolerance
+Warning: max bound violation (1.2330e+01) exceeds tolerance
+         (model may be infeasible or unbounded - try turning presolve off)
+Best objective -8.248900000000e+02, best bound -8.248900000000e+02, gap 0.0000%
