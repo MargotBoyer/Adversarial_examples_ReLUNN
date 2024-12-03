@@ -195,7 +195,7 @@ def main():
         # parametres_reseau["U"] = U_x0
         # print("L_x0 : ", L_x0)
         # print("U_x0 : ", U_x0)
-        L_x0, U_x0 = compute_FULL_U_L(x0,K,n,W_reverse,b,L,U,epsilon)
+        L_x0, U_x0 = compute_FULL_U_L(x0,K,n,W_reverse,b,L,U,epsilon,verbose=True)
         
         break
         for optimization_model in optimization_models:

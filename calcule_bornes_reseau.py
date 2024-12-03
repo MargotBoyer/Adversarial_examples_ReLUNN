@@ -152,23 +152,23 @@ def solve_borne_inf_L(
 
 
 
-def Interval_Bound_Propagation(
-    K : int, 
-    n : List[int], 
-    x0 : List[float], 
-    W : List[List[List[float]]], 
-    b : List[List[float]], 
-    epsilon : float, 
-    relax : bool, 
-    parametres_gurobi : bool, 
-    verbose : bool = False
-):
-    L = [[None for j in range(n[k])] for k in range(K+1)]
-    L[0] = [(x0[j]-epsilon) for j in range(n[0])]
+# def Interval_Bound_Propagation(
+#     K : int, 
+#     n : List[int], 
+#     x0 : List[float], 
+#     W : List[List[List[float]]], 
+#     b : List[List[float]], 
+#     epsilon : float, 
+#     relax : bool, 
+#     parametres_gurobi : bool, 
+#     verbose : bool = False
+# ):
+#     L = [[None for j in range(n[k])] for k in range(K+1)]
+#     L[0] = [(x0[j]-epsilon) for j in range(n[0])]
 
-    for couche in range(1,K):
-        for neurone in range(n[couche]):
-            
+#     for couche in range(1,K):
+#         for neurone in range(n[couche]):
+
     
 
 
@@ -218,10 +218,10 @@ def compute_FULL_U_L(x0, K, n, W, b, L, U, epsilon, verbose = False):
             print(f"U = {U_neurone}")
             U_couche.append(U_neurone)
 
-            if U_neurone < 0:
+            if (couche>0) & (U_neurone < 0):
                 print(f"Le neurone {neurone} de la couche {couche} est inactif stable.")
                 neurones_inactifs_stables.append((couche,neurone))
-            elif L_neurone > 0 : 
+            elif (couche>0) & (L_neurone > 0) : 
                 neurones_actifs_stables.append((couche,neurone))
                 print(f"Le neurone {neurone} de la couche {couche} est actif stable.")
         L_new.append(L_couche)
