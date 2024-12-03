@@ -47,11 +47,23 @@ def add_variable_beta(m : gp.Model, K : int, n : List[int], relax : bool):
             beta[j] = m.addVar(vtype=GRB.BINARY)
     return beta
 
-def add_variable_sigma(m : gp.Model, K : int, n : List[int], relax : bool):
+
+def add_variable_sigma(m : gp.Model, 
+                       couche_finale : int, 
+                       n : List[int], 
+                       relax : bool,
+                       neurone : int = None,
+                       neurones_stables : List = []):
     sigma = gp.tupledict()
-    for k in range(1, K):
+    for k in range(1, couche_finale+1):
+        if (k==couche_finale) and neurone is not None:
+            print(f"On ne cree que le sigma de la couche {k}, neurone = {neurone}")
+            sigma[k, neurone] = m.addVar(vtype=GRB.BINARY)
+            continue
         for j in range(n[k]):
-            if relax == 1:
+            if (k,j) in neurones_stables:
+                print(f"La variable sigma pour le neurone {j} de la couche {k} n'a pas ete cree : ce neurone est stable.")
+            elif relax == 1:
                 sigma[k, j] = m.addVar(lb = 0, ub = 1, vtype=GRB.CONTINUOUS)
             else:
                 sigma[k, j] = m.addVar(vtype=GRB.BINARY)

@@ -48,7 +48,9 @@ def solve_borne_sup_U(
     U : List[List[float]],
     epsilon : float, 
     relax : bool, 
-    parametres_gurobi : bool, 
+    neurones_actifs_stables : List,
+    neurones_inactifs_stables : List,
+    parametres_gurobi : Dict, 
     verbose : bool = False
 ):
     env = gp.Env(empty=True)
@@ -58,11 +60,12 @@ def solve_borne_sup_U(
         env.setParam("OutputFlag", 0)
     env.start()
     m = gp.Model("Calcul_Borne_Sup_U", env=env)
+    parametres_gurobi["TimeLimit"] = 300
     adapt_parametres_gurobi(m,parametres_gurobi)
 
     z = add_variable_z(m, K, n[:couche+1], L, couche, neurone, impose_positive=False)
     if couche > 0 :
-        sigma = add_variable_sigma(m, couche+1, n, relax)
+        sigma = add_variable_sigma(m, couche, n, relax, neurone, neurones_actifs_stables + neurones_inactifs_stables)
 
     # -------------------- Fonction objectif --------------------#
     if couche > 0:
@@ -82,7 +85,8 @@ def solve_borne_sup_U(
         # # Contrainte derniere couche sans ReLU
         # add_last_layer(m,z,couche,n,W,b,neurone)
         # Contraintes hidden layers avec ReLU 
-        add_hidden_layer_constraints_with_sigma_linear_Glover(m, z, sigma, W, b, couche, n, U, L)
+        add_hidden_layer_constraints_with_sigma_linear_Glover(m, z, sigma, W, b, couche, n, U, L, 
+                                                              neurones_actifs_stables, neurones_inactifs_stables)
         
     # m.printStats()
     m.write("Models_gurobi/lp/Bornes_max_U.lp")
@@ -106,7 +110,9 @@ def solve_borne_inf_L(
     U : List[List[float]],
     epsilon : float, 
     relax : bool, 
-    parametres_gurobi : bool, 
+    neurones_actifs_stables : List,
+    neurones_inactifs_stables : List,
+    parametres_gurobi : Dict, 
     verbose : bool = False
 ):
     env = gp.Env(empty=True)
@@ -116,11 +122,12 @@ def solve_borne_inf_L(
         env.setParam("OutputFlag", 0)
     env.start()
     m = gp.Model("Calcul_Borne_Inf_L", env=env)
+    parametres_gurobi["TimeLimit"] = 300
     adapt_parametres_gurobi(m,parametres_gurobi)
 
-    z = add_variable_z(m, K, n[:couche+1], L, couche, neurone,impose_positive=False)
+    z = add_variable_z(m, K, n[:couche+1], L, couche, neurone, impose_positive=False)
     if couche > 0:
-        sigma = add_variable_sigma(m, couche+1, n, relax)
+        sigma = add_variable_sigma(m, couche, n, relax, neurone, neurones_actifs_stables + neurones_inactifs_stables)
 
     # -------------------- Fonction objectif --------------------#
     if couche > 0:
@@ -139,7 +146,8 @@ def solve_borne_inf_L(
         # # Contrainte derniere couche sans ReLU
         # add_last_layer(m,z,couche,n,W,b,neurone)
         # Contraintes hidden layers avec ReLU 
-        add_hidden_layer_constraints_with_sigma_linear_Glover(m, z, sigma, W, b, couche, n, U, L)
+        add_hidden_layer_constraints_with_sigma_linear_Glover(m, z, sigma, W, b, couche, n, U, L,
+                                                              neurones_actifs_stables, neurones_inactifs_stables)
         
 
     # m.printStats()
@@ -152,22 +160,38 @@ def solve_borne_inf_L(
 
 
 
-# def Interval_Bound_Propagation(
-#     K : int, 
-#     n : List[int], 
-#     x0 : List[float], 
-#     W : List[List[List[float]]], 
-#     b : List[List[float]], 
-#     epsilon : float, 
-#     relax : bool, 
-#     parametres_gurobi : bool, 
-#     verbose : bool = False
-# ):
-#     L = [[None for j in range(n[k])] for k in range(K+1)]
-#     L[0] = [(x0[j]-epsilon) for j in range(n[0])]
+def Interval_Bound_Propagation(
+    K : int, 
+    n : List[int], 
+    x0 : List[float], 
+    W : List[List[List[float]]], 
+    b : List[List[float]], 
+    epsilon : float, 
+    verbose : bool = False
+):
+    L = [[None for j in range(n[k])] for k in range(K+1)]
+    L[0] = [(x0[j]-epsilon) for j in range(n[0])]
 
-#     for couche in range(1,K):
-#         for neurone in range(n[couche]):
+    U = [[None for j in range(n[k])] for k in range(K+1)]
+    U[0] = [(x0[j]+epsilon) for j in range(n[0])]
+
+    for couche in range(1,K+1):
+        for neurone in range(n[couche]):
+            lb = 0
+            ub = 0
+            for i in range(n[couche-1]):
+                if W[couche-1][i][neurone] > 0:
+                    lb += W[couche-1][i][neurone] * L[couche-1][i]
+                    ub += W[couche-1][i][neurone] * U[couche-1][i]
+                else : 
+                    lb += W[couche-1][i][neurone] * U[couche-1][i]
+                    ub += W[couche-1][i][neurone] * L[couche-1][i]
+            L[couche][neurone] = lb + b[couche-1][neurone]
+            U[couche][neurone] = ub + b[couche-1][neurone]
+    print("Resultats de l'IBP : ")
+    print(f"L = {L}")
+    print(f"U = {U}")
+    return L, U
 
     
 
@@ -205,23 +229,28 @@ def compute_FULL_U_L(x0, K, n, W, b, L, U, epsilon, verbose = False):
     neurones_inactifs_stables = []
     neurones_actifs_stables = []
     relax = 0
-    for couche in range(0,K+1):
+    for feature in range(n[0]) :
+        L_new.append(x0[feature] - epsilon)
+        U_new.append(x0[feature] + epsilon)
+    for couche in range(1,K+1):
         L_couche= []
         U_couche= []
         for neurone in range(n[couche]):
-            L_neurone, status, time_execution, dic_nb_nodes = solve_borne_inf_L(couche, neurone, K, n, x0,  W, b, L, U, epsilon, relax, parametres_gurobi, verbose = verbose)            
+            L_neurone, status, time_execution, dic_nb_nodes = solve_borne_inf_L(couche, neurone, K, n, x0,  W, b, L, U, epsilon, 
+                                                                                relax, neurones_actifs_stables, neurones_inactifs_stables, parametres_gurobi, verbose = verbose)            
             L_couche.append(L_neurone)
 
-            U_neurone, status, time_execution, dic_nb_nodes = solve_borne_sup_U(couche, neurone, K, n, x0,  W, b, L, U, epsilon, relax, parametres_gurobi,verbose = verbose)
+            U_neurone, status, time_execution, dic_nb_nodes = solve_borne_sup_U(couche, neurone, K, n, x0,  W, b, L, U, epsilon, 
+                                                                                relax, neurones_actifs_stables, neurones_inactifs_stables, parametres_gurobi,verbose = verbose)
             print(f"\n     Neurone {neurone} couche {couche} : ")
             print(f"L = {L_neurone}")
             print(f"U = {U_neurone}")
             U_couche.append(U_neurone)
 
-            if (couche>0) & (U_neurone < 0):
+            if (couche>0) & (couche<K) & (U_neurone < 0):
                 print(f"Le neurone {neurone} de la couche {couche} est inactif stable.")
                 neurones_inactifs_stables.append((couche,neurone))
-            elif (couche>0) & (L_neurone > 0) : 
+            elif (couche>0) & (couche<K) & (L_neurone > 0) : 
                 neurones_actifs_stables.append((couche,neurone))
                 print(f"Le neurone {neurone} de la couche {couche} est actif stable.")
         L_new.append(L_couche)
@@ -270,10 +299,18 @@ def test():
     epsilon_adv = 0.1
     relax = 0
     verbose = False
-    U = compute_FULL_U(x0, K, n, W, b, L, U, epsilon)
-    L = compute_FULL_L(x0, K, n, W, b, L, U, epsilon)
+    # U = compute_FULL_U(x0, K, n, W, b, L, U, epsilon)
+    # L = compute_FULL_L(x0, K, n, W, b, L, U, epsilon)
+    L, U = compute_FULL_U_L(x0, K, n, W, b, L, U, epsilon)
+    print("Calcul exact des bornes : ")
     print("U : ", U)
     print("L : ", L)
+
+    U, L = Interval_Bound_Propagation(K,n,x0,W,b,epsilon)
+    print("Interval Bound Propagation : ")
+    print("U : ", U)
+    print("L : ", L)
+
 
     # couche = 2
     # neurone = 0

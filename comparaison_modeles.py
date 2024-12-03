@@ -41,7 +41,8 @@ from comparaison_modeles_outils import(
 from calcule_bornes_reseau import (
     compute_FULL_L,
     compute_FULL_U,
-    compute_FULL_U_L
+    compute_FULL_U_L,
+    Interval_Bound_Propagation
 )
 
 # RESEAU
@@ -53,7 +54,7 @@ from reseau_train import Reseau, architectures_modele
 
 def main():
     data_modele = "MNIST"
-    architecture = "6x100"
+    architecture = "2x20"
     n, K = architectures_modele(data_modele,architecture)
     file, data = load_data(data_modele, architecture)
     W, b = retourne_weights(K, n, file)
@@ -97,7 +98,7 @@ def main():
     # Certification problem hyperparameters
     rho = 0.001
     epsilon_adv = 0.0001
-    epsilon = 0.2
+    epsilon = 0.05
     relax = 0
     verbose = True
 
@@ -132,14 +133,17 @@ def main():
         if model in ["FprG_SDP","FprG_d_SDP"]:
             coupes_noms = ["RLT_Lan", "zk^2", "betai*betaj","sigmak*zk"]
             # coupes_noms = ["zk^2", "betai*betaj","sigmak*zk"]
+            coupes_noms = ["zk^2"]
 
         elif model in ["Lan_SDP","Lan_couches_SDP"]:
             coupes_noms = ["RLT_Lan", "zk^2"]
             #coupes_noms = ["zk^2"]
+            coupes_noms = ["zk^2"]
 
         elif model in ["Mix_SDP", "Mix_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP"]:
             coupes_noms = ["RLT_Lan", "zk^2", "betai*betaj","betai*zkj"]
             # coupes_noms = ["zk^2", "betai*betaj","betai*zkj"]
+            coupes_noms = ["zk^2"]
 
         dict_coupes_false = {coupe : False for coupe in coupes_totales if coupe not in coupes_noms}
         coupes_combinaisons_model = list(itertools.product([True, False], repeat=len(coupes_noms)))
@@ -163,7 +167,7 @@ def main():
         break  # On s'arrête après le premier batch
     
 
-    x0_list = get_subset_from_loader(Res, trainloader, n[K], num_elements=30) #+ get_subset_from_loader(Res, testloader, n[K], num_elements=2)
+    x0_list = get_subset_from_loader(Res, trainloader, n[K], num_elements=1) #+ get_subset_from_loader(Res, testloader, n[K], num_elements=2)
 
     # Adversarial examples
     # nb_adverses, nb_robustes, adverses, rep = compute_adverses_samples(Res,data_modele,optimization_model,parametres_reseau, parametres_optimisation,x0_list)
@@ -195,7 +199,8 @@ def main():
         # parametres_reseau["U"] = U_x0
         # print("L_x0 : ", L_x0)
         # print("U_x0 : ", U_x0)
-        L_x0, U_x0 = compute_FULL_U_L(x0,K,n,W_reverse,b,L,U,epsilon,verbose=True)
+        L_x0_IB, U_x0_IB = Interval_Bound_Propagation(K,n,x0,W_reverse,b,epsilon,verbose=False)
+        L_x0, U_x0 = compute_FULL_U_L(x0,K,n,W_reverse,b,L,U,epsilon,verbose=False)
         
         break
         for optimization_model in optimization_models:

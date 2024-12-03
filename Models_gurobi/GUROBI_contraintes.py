@@ -133,38 +133,19 @@ def add_hidden_layer_constraints_with_sigma_linear_Glover(
         n : List[int], 
         U : List[List[float]], 
         L : List[List[float]],
-        neurone : int = None):
+        neurones_actifs_stables : List, 
+        neurones_inactifs_stables : List):
     """ Contrainte ReLU3 """
     for k in range(1, K):
-        if (k==K-1) and neurone is not None:
-            m.addConstr(
-                gp.quicksum(W[k - 1][i][neurone] * z[k - 1, i] for i in range(n[k - 1]))
-                + b[k - 1][neurone]
-                <= U[k][neurone] * sigma[k, neurone]
-            )
-            m.addConstr(
-                gp.quicksum(W[k - 1][i][neurone] * z[k - 1, i] for i in range(n[k - 1]))
-                + b[k - 1][neurone]
-                >= L[k][neurone] * (1 - sigma[k, neurone])
-            )
-
-            m.addConstr(
-                z[k, neurone]
-                >= gp.quicksum(W[k - 1][i][neurone] * z[k - 1, i] for i in range(n[k - 1]))
-                + b[k - 1][neurone]
-                - U[k][neurone] * (1 - sigma[k, neurone])
-            )
-            m.addConstr(z[k, neurone] >= L[k][neurone] * sigma[k, neurone])
-            m.addConstr(
-                z[k, neurone]
-                <= gp.quicksum(W[k - 1][i][neurone] * z[k - 1, i] for i in range(n[k - 1]))
-                + b[k - 1][neurone]
-                - L[k][neurone] * (1 - sigma[k, neurone])
-            )
-            m.addConstr(z[k, neurone] <= U[k][neurone] * sigma[k, neurone])
-            continue
-
         for j in range(n[k]):
+            if (k,j) in neurones_inactifs_stables :
+                 m.addConstr(z[k, j] == 0)
+                 continue
+            elif (k,j) in neurones_actifs_stables :
+                 m.addConstr(z[k, j] == gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) 
+                             + b[k - 1][j])
+                 continue
+
             m.addConstr(
                 gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
