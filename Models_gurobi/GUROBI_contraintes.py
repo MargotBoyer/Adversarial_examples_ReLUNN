@@ -133,8 +133,8 @@ def add_hidden_layer_constraints_with_sigma_linear_Glover(
         n : List[int], 
         U : List[List[float]], 
         L : List[List[float]],
-        neurones_actifs_stables : List, 
-        neurones_inactifs_stables : List):
+        neurones_actifs_stables : List = [], 
+        neurones_inactifs_stables : List = []):
     """ Contrainte ReLU3 """
     for k in range(1, K):
         for j in range(n[k]):

@@ -42,7 +42,8 @@ from calcule_bornes_reseau import (
     compute_FULL_L,
     compute_FULL_U,
     compute_FULL_U_L,
-    Interval_Bound_Propagation
+    Interval_Bound_Propagation,
+    calcule_bornes_all_algorithms
 )
 
 # RESEAU
@@ -123,7 +124,7 @@ def main():
 
     # CHOIX DES MODELES D'OPTIMISATION A TESTER
     # optimization_models = ["Fischetti_Obj_diff"] +  optimization_models_mosek #+ ["Fischetti_Obj_diff","Mix_diff_obj_quad"]
-    optimization_models = ["Fischetti_Obj_diff","Lan_quad","Mix_diff_obj_quad", "Mix_d_SDP","Mix_d_couches_SDP", "Lan_SDP", "Lan_couches_SDP","Mix_SDP", "Mix_couches_SDP"]
+    optimization_models = optimization_models_gurobi   #["Fischetti_Obj_diff","Lan_quad","Mix_diff_obj_quad", "Mix_d_SDP","Mix_d_couches_SDP", "Lan_SDP", "Lan_couches_SDP","Mix_SDP", "Mix_couches_SDP"]
 
     dict_coupes_combinaisons = {}
     # Creation des coupes pour chacun des modeles SDP
@@ -199,10 +200,19 @@ def main():
         # parametres_reseau["U"] = U_x0
         # print("L_x0 : ", L_x0)
         # print("U_x0 : ", U_x0)
-        L_x0_IB, U_x0_IB = Interval_Bound_Propagation(K,n,x0,W_reverse,b,epsilon,verbose=False)
-        L_x0, U_x0 = compute_FULL_U_L(x0,K,n,W_reverse,b,L,U,epsilon,verbose=False)
+        # L_x0_IB, U_x0_IB = Interval_Bound_Propagation(K,n,x0,W_reverse,b,epsilon,verbose=False)
+        # L_x0, U_x0 = compute_FULL_U_L(x0,K,n,W_reverse,b,L,U,epsilon,verbose=False)
+        time_before_bounds = time.time()
+        L_x0, U_x0, neurones_actifs_stables, neurones_inactifs_stables = calcule_bornes_all_algorithms(
+            x0,K,n,W_reverse,b,epsilon, verbose = False)
+        time_after_bounds = time.time()
+        print("Temps de calcul des bornes : ", int(time_after_bounds - time_before_bounds))
+        time.sleep(10)
         
-        break
+        print("L_x0 : ", L_x0[1:])
+        print("U_x0 : ", U_x0[1:])
+
+
         for optimization_model in optimization_models:
             print(f"\n \n \n \n Modèle d'optimisation : {optimization_model}")
 

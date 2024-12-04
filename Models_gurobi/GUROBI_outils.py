@@ -11,7 +11,7 @@ parametres_gurobi = {"FeasibilityTol": 1e-2,
                          "NonConvex" : None,  #2
                          "Presolve": None, # 0  La désactivation du presolve peut aider à trouver des solutions faisables plus rapidement
                                         # Le presolve simplifie le problème
-                         "TimeLimit" : 3000,
+                         "TimeLimit" : 300,
                          "MinRelNodes" : None,   # 0,
                          "PumpPasses" : None, # 100,
                          "BarConvTol" : None, #1e-6,
@@ -113,6 +113,7 @@ def retourne_valeurs_solutions_bornes(
         status = 3
     elif m.status == GRB.TIME_LIMIT:
         print("Temps limite atteint, récupération de la meilleure solution réalisable")
+        print("Gap : ", m.MIPGap)
         if m.SolCount > 0:
             print("Solution réalisable disponible")
             Sol_borne = z[couche, neurone].X
@@ -121,6 +122,7 @@ def retourne_valeurs_solutions_bornes(
     else:
         if verbose:
             print("Statut modele : ", m.Status)
+        print("Bound calculee : ", m.ObjBoundC)
     return opt, status, time_execution, {"Number_Nodes" : nb_nodes}
 
 

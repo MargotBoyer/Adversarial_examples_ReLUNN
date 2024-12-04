@@ -1,15 +1,23 @@
 {
     "Data_modele": "MNIST",
     "Optimization_models": [
+        "Glover_Obj_diff",
         "Fischetti_Obj_diff",
-        "Lan_quad",
+        "Fischetti_Obj_dist",
+        "ReLUconvexe_Adv1",
+        "Mix",
+        "FprG_quad",
         "Mix_diff_obj_quad",
-        "Mix_d_SDP",
-        "Mix_d_couches_SDP",
-        "Lan_SDP",
-        "Lan_couches_SDP",
-        "Mix_SDP",
-        "Mix_couches_SDP"
+        "Adv2_ReLU2_lin",
+        "F_ReLU1_Adv2",
+        "ReLU2_Adv2__FprGdiff__",
+        "Adv3_ReLU2_lin",
+        "F_ReLU1_Adv3",
+        "Adv3_ReLU2_lin",
+        "ReLU3_Adv3",
+        "Adv3_ReLU2",
+        "F_ReLU1_Adv3",
+        "Lan_quad"
     ],
     "K": 3,
     "n": [
