@@ -160,12 +160,12 @@ def main():
 
 
     # AFFICHAGE DES VALEURS MIN ET MAX DES DONNEES
-    for batch in trainloader:
-        data, labels = batch
-        max_value = data.max()  
-        print(f"Valeur maximale du premier batch : {max_value.item()}")
-        print(f"Valeur minimale du premier batch : {data.min().item()}")
-        break  # On s'arrête après le premier batch
+    # for batch in trainloader:
+    #     data_, labels = batch
+    #     max_value = data_.max()  
+    #     print(f"Valeur maximale du premier batch : {max_value.item()}")
+    #     print(f"Valeur minimale du premier batch : {data_.min().item()}")
+    #     break  # On s'arrête après le premier batch
     
 
     x0_list = get_subset_from_loader(Res, trainloader, n[K], num_elements=1) #+ get_subset_from_loader(Res, testloader, n[K], num_elements=2)
@@ -261,3 +261,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+    

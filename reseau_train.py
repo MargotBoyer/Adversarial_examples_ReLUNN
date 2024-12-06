@@ -17,6 +17,10 @@ def retourne_reseau():
     n=[3,2,4,3]
     return K,W,b,n
 
+
+    
+
+
 class Reseau(nn.Module): 
     def __init__(self, K, n, W=None, b=None):
         super(Reseau, self).__init__()

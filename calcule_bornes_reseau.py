@@ -217,6 +217,7 @@ def compute_FULL_U(x0, K, n, W, b, L, U, epsilon):
         U_new.append(U_couche)
     return U_new
 
+
 def compute_FULL_L(x0, K, n, W, b, L, U, epsilon):
     L_new = []
     relax = 0
@@ -231,7 +232,8 @@ def compute_FULL_L(x0, K, n, W, b, L, U, epsilon):
     return L_new
 
 
-def compute_FULL_U_L(x0, K, n, W, b, L, U, epsilon, verbose = False, neurones_actifs_stables = [], neurones_inactifs_stables = []):
+def compute_FULL_U_L(x0, K, n, W, b, L, U, epsilon, 
+                     verbose = False, neurones_actifs_stables = [], neurones_inactifs_stables = []):
     L_new = []
     U_new = []
 
