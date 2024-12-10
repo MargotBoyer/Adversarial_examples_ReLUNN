@@ -7,6 +7,8 @@ from torchvision.datasets import MNIST
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
+from comparaison_modeles_outils import load_data, retourne_weights
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"Using {device} device")
 
@@ -38,6 +40,13 @@ class Reseau(nn.Module):
             self.layers.append(couche)
             if k < K:
                 self.layers.append(nn.ReLU(inplace=True))
+
+    @classmethod
+    def create_with_file(cls, data_modele, architecture = None):
+        n, K = architectures_modele(data_modele,architecture)
+        file, data = load_data(data_modele, architecture)
+        W, b = retourne_weights(K, n, file)
+        return cls(K, n, W, b)
 
     def forward(self, x, verbose = False, return_last_hidden=False):
         x = torch.tensor(x, dtype=torch.float32).to(device)

@@ -214,12 +214,21 @@ def add_hidden_layers_ReLU_convex_relaxation(
         W : List[List[List[float]]], 
         b : List[List[float]], 
         U : List[List[float]], 
-        L : List[List[float]]):
+        L : List[List[float]],
+        neurones_actifs_stables : List = [],
+        neurones_inactifs_stables : List = []):
     """ Contrainte ReLU non exacte mais linéaire : relaxation convexe """
     for k in range(1, K):
         for j in range(n[k]):
+            if (k,j) in neurones_inactifs_stables :
+                 m.addConstr(z[k, j] == 0)
+                 continue
+            elif (k,j) in neurones_actifs_stables :
+                 m.addConstr(z[k, j] == gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) 
+                             + b[k - 1][j])
+                 continue
+            
             m.addConstr(z[k,j] >= gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) + b[k - 1][j])
-
             # Calcul des coordonnées de la droite y = ax + b reliant les points (U,U) et (L,0)
             a = U[k][j] / (U[k][j] - L[k][j])
             d = - L[k][j] * a

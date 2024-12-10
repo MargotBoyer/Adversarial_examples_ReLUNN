@@ -20,6 +20,7 @@ parametres_gurobi = {"FeasibilityTol": 1e-2,
                          "StartNodeLimit" : None, # 1000,
                          "Heuristics" : None, # 0.5,  # Contrôle le pourcentage de temps dédié aux heuristiques dans gurobi
                          "Method" : None, # Choix de l'algorithme utilisé pour la résolution (1 : simplexe)
+                        "DualReduction" : 0
                          }
 
 
@@ -75,6 +76,11 @@ def adapt_parametres_gurobi(m : gp.Model, parametres_gurobi : Dict):
         print("ajout du parametre Method")
         m.setParam(GRB.Param.Method, parametres_gurobi["Method"])
 
+    m.setParam("InfUnbdInfo", 1)
+
+    if parametres_gurobi["DualReduction"] is not None :
+        m.setParam("DualReductions", parametres_gurobi["DualReduction"])
+
 
     
 def retourne_valeurs_solutions_bornes(
@@ -110,13 +116,15 @@ def retourne_valeurs_solutions_bornes(
     elif m.Status == GRB.INFEASIBLE:
         if verbose:
             print("Modele infaisable !")
+        m.computeIIS()
+        m.write(f'Models_gurobi\lp\{m.ModelName}.ilp')
         status = 3
     elif m.status == GRB.TIME_LIMIT:
         print("Temps limite atteint, récupération de la meilleure solution réalisable")
         print("Gap : ", m.MIPGap)
         if m.SolCount > 0:
             print("Solution réalisable disponible")
-            Sol_borne = z[couche, neurone].X
+            #Sol_borne = z[couche, neurone].X
             return m.ObjBound, 2, time_execution, {"Number_Nodes" : nb_nodes}
         status = 2
     else:

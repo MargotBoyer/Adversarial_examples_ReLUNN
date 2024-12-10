@@ -25,8 +25,10 @@ def add_variable_z(
     delta = 0.01
     z = gp.tupledict()
     max_couche = K
+    print("Initialisation de la variable z...")
     if couche is not None : 
         max_couche = couche
+    print(f"Neurone : {neurone}, maxcouche = {max_couche}")
     for k in range(max_couche + 1):
         lb_ = L[k]
         if impose_positive and (k>0) and (k<K):

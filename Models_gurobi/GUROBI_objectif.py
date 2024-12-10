@@ -74,9 +74,11 @@ def add_objective_U_linear(m : gp.Model,
                     b : List[List[float]],
                     n : List[int],
                     couche : int, 
-                    neurone : int):
+                    neurone : int,
+                    neurones_inactifs_stables : list = None):
     """ Objectif calculant la borne sup U de la valeur du neurone neurone de la couche couche"""
-    m.setObjective(gp.quicksum(W[couche-1][i][neurone] * z[couche-1,i] for i in range(n[couche-1])) + b[couche-1][neurone], GRB.MAXIMIZE)
+    m.setObjective(gp.quicksum(W[couche-1][i][neurone] * z[couche-1,i] for i in range(n[couche-1]) if (couche,i) not in neurones_inactifs_stables) 
+                   + b[couche-1][neurone], GRB.MAXIMIZE)
 
 def add_objective_L_linear(m : gp.Model, 
                     z : gp.tupledict, 
@@ -84,6 +86,8 @@ def add_objective_L_linear(m : gp.Model,
                     b : List[List[float]],
                     n : List[int],
                     couche : int, 
-                    neurone : int):
+                    neurone : int,
+                    neurones_inactifs_stables : list = []):
     """ Objectif calculant la borne sup L de la valeur du neurone neurone de la couche couche"""
-    m.setObjective(gp.quicksum(W[couche-1][i][neurone] * z[couche-1,i] for i in range(n[couche-1])) + b[couche-1][neurone], GRB.MINIMIZE)
+    m.setObjective(gp.quicksum(W[couche-1][i][neurone] * z[couche-1,i] for i in range(n[couche-1]) if (couche,i) not in neurones_inactifs_stables)
+                   + b[couche-1][neurone], GRB.MINIMIZE)
