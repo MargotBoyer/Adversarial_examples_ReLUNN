@@ -11,7 +11,7 @@ parametres_gurobi = {"FeasibilityTol": 1e-2,
                          "NonConvex" : None,  #2
                          "Presolve": None, # 0  La désactivation du presolve peut aider à trouver des solutions faisables plus rapidement
                                         # Le presolve simplifie le problème
-                         "TimeLimit" : 300,
+                         "TimeLimit" : 10,
                          "MinRelNodes" : None,   # 0,
                          "PumpPasses" : None, # 100,
                          "BarConvTol" : None, #1e-6,

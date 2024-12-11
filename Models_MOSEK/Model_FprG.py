@@ -306,7 +306,7 @@ def test():
     u = 150
     lb = -15
 
-    Res = Reseau(K, n, W_reverse, b)
+    #Res = Reseau(K, n, W_reverse, b)
 
     x0 = [0.6, -0.3, 0.4]
     y0 = Res.retourne_label(x0)
@@ -327,12 +327,12 @@ def test():
     )
     print("Solution:", solution)
     print("Nombre d'itérations : ", dic_num_iterations["Nombre_iterations"])
-    if solution is not None:
-        sortie = Res(solution, True)
-        print("Sortie du réseau : ", sortie)
-        predicted_label = Res.retourne_label(solution)
-        print("Label : ", predicted_label)
-        #print("Sortie en 0 : ", Res([0, 0, 0]))
+    # if solution is not None:
+    #     sortie = Res(solution, True)
+    #     print("Sortie du réseau : ", sortie)
+    #     predicted_label = Res.retourne_label(solution)
+    #     print("Label : ", predicted_label)
+    #     #print("Sortie en 0 : ", Res([0, 0, 0]))
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ from MOSEK_coupes import (
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 print("path sys : ", sys.path)
 
-from reseau_train import Reseau  # noqa: E402
+#from reseau_train import Reseau  # noqa: E402
 
 inf = 10e5
 
@@ -277,10 +277,10 @@ def test():
     u = 150
     lb = -15
 
-    Res = Reseau(K, n, W_reverse, b)
-
+    #Res = Reseau(K, n, W_reverse, b)
+    y0= 1
     x0 = [0.6, -0.3, 0.4]
-    y0 = Res.retourne_label(x0)
+    #y0 = Res.retourne_label(x0)
     print("Label x0 : ", y0)
 
     ycible = 2
@@ -298,12 +298,12 @@ def test():
     )
     print("Solution:", solution)
     print("Nombre d'itérations : ", dic_num_iterations["Nombre_iterations"])
-    if solution is not None:
-        sortie = Res(solution, True)
-        print("Sortie du réseau : ", sortie)
-        predicted_label = Res.retourne_label(solution)
-        print("Label : ", predicted_label)
-        #print("Sortie en 0 : ", Res([0, 0, 0]))
+    # if solution is not None:
+    #     sortie = Res(solution, True)
+    #     print("Sortie du réseau : ", sortie)
+    #     predicted_label = Res.retourne_label(solution)
+    #     print("Label : ", predicted_label)
+    #     #print("Sortie en 0 : ", Res([0, 0, 0]))
 
 
 if __name__ == "__main__":

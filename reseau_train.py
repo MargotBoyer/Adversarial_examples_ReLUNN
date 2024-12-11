@@ -7,7 +7,7 @@ from torchvision.datasets import MNIST
 import torchvision.transforms as transforms
 from tqdm import tqdm
 
-from comparaison_modeles_outils import load_data, retourne_weights
+from load import load_file_weights, retourne_weights
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"Using {device} device")
@@ -44,7 +44,7 @@ class Reseau(nn.Module):
     @classmethod
     def create_with_file(cls, data_modele, architecture = None):
         n, K = architectures_modele(data_modele,architecture)
-        file, data = load_data(data_modele, architecture)
+        file = load_file_weights(data_modele, architecture)
         W, b = retourne_weights(K, n, file)
         return cls(K, n, W, b)
 
