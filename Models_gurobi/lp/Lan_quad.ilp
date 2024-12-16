@@ -1,0 +1,9 @@
+\ Model Lan_quad_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ qc0: 2.484952569007874 C5 + [ C5 ^2 ] <= -1.363561600424276
+Bounds
+ C5 >= -0.01
+End

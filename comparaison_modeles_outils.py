@@ -60,7 +60,9 @@ def compute_adverse(
         parametres_optimisation : Dict, 
         x0 : List[float], 
         ytrue : int, 
-        ycible : int):
+        ycible : int,
+        neurones_actifs_stables : List = [],
+        neurones_inactifs_stables : List = []):
     """ Calcul du problème de certification sur la donnée x0 de label ytrue avec pour modèle optimization_modele"""
     if optimization_model == "Fischetti_Obj_dist":
         if parametres_optimisation["verbose"]:
@@ -154,7 +156,8 @@ def compute_adverse(
         Sol, opt, status, time, dic_infos = solveMix_SDP(parametres_reseau["K"], parametres_reseau['n'], x0, ytrue, ycible, parametres_reseau["U"], 
                                                         parametres_reseau["L"],  parametres_reseau["W"],  parametres_reseau["b"], 
                                                         parametres_optimisation["epsilon"], parametres_optimisation["rho"],
-                                                        parametres_optimisation["coupes"], parametres_optimisation["verbose"])
+                                                        parametres_optimisation["coupes"], parametres_optimisation["verbose"],
+                                                        neurones_actifs_stables, neurones_inactifs_stables)
     elif optimization_model == "FprG_SDP" :
         if parametres_optimisation["verbose"]:
             print(" \n    FprG_SDP : ")
@@ -184,21 +187,24 @@ def compute_adverse(
         Sol, opt, status, time, dic_infos = solveMix_SDP_par_couches(parametres_reseau["K"], parametres_reseau['n'], x0, ytrue, ycible, parametres_reseau["U"], 
                                                         parametres_reseau["L"],  parametres_reseau["W"],  parametres_reseau["b"], 
                                                         parametres_optimisation["epsilon"], parametres_optimisation["rho"],
-                                                        parametres_optimisation["coupes"], parametres_optimisation["verbose"])
+                                                        parametres_optimisation["coupes"], parametres_optimisation["verbose"],
+                                                        neurones_actifs_stables, neurones_inactifs_stables)
     elif optimization_model == "Mix_d_SDP":
         if parametres_optimisation["verbose"]:
             print(" \n    Mix_d_SDP : ")
         Sol, opt, status, time, dic_infos = solveMix_SDP_objbetas(parametres_reseau["K"], parametres_reseau["n"], x0, ytrue, 
                                                        ycible, parametres_reseau["U"], parametres_reseau["L"], parametres_reseau["W"], 
                                                        parametres_reseau["b"], parametres_optimisation["epsilon"], parametres_optimisation["rho"], 
-                                                       parametres_optimisation["coupes"], parametres_optimisation["verbose"])
+                                                       parametres_optimisation["coupes"], parametres_optimisation["verbose"],
+                                                       neurones_actifs_stables, neurones_inactifs_stables)
     elif optimization_model == "Mix_d_couches_SDP":
         if parametres_optimisation["verbose"]:
             print(" \n    Mix_d_couches_SDP : ")
         Sol, opt, status, time, dic_infos = solve_Mix_SDP_objbetas_couches(parametres_reseau["K"], parametres_reseau["n"], x0, ytrue, 
                                                        ycible, parametres_reseau["U"], parametres_reseau["L"], parametres_reseau["W"], 
                                                        parametres_reseau["b"], parametres_optimisation["epsilon"], parametres_optimisation["rho"], 
-                                                       parametres_optimisation["coupes"], parametres_optimisation["verbose"])
+                                                       parametres_optimisation["coupes"], parametres_optimisation["verbose"],
+                                                       neurones_actifs_stables, neurones_inactifs_stables)
     elif optimization_model == "Mix_diff_obj_quad" :
         if parametres_optimisation["verbose"]:
             print(" \n    Mix_diff_obj_quad : ")
@@ -214,7 +220,8 @@ def compute_adverse(
                                                           parametres_reseau["U"], parametres_reseau["L"], parametres_reseau["W"], 
                                                        parametres_reseau["b"], parametres_optimisation["epsilon"],
                                                        parametres_optimisation["rho"], parametres_optimisation["coupes"], 
-                                                      parametres_optimisation["verbose"])
+                                                      parametres_optimisation["verbose"],
+                                                      neurones_actifs_stables, neurones_inactifs_stables)
     elif optimization_model == "Lan_couches_SDP" :
         if parametres_optimisation["verbose"]:
             print(" \n    Lan_couches_SDP : ")
@@ -222,7 +229,8 @@ def compute_adverse(
                                                           parametres_reseau["U"], parametres_reseau["L"], parametres_reseau["W"], 
                                                        parametres_reseau["b"], parametres_optimisation["epsilon"],
                                                        parametres_optimisation["rho"], parametres_optimisation["coupes"], 
-                                                      parametres_optimisation["verbose"])
+                                                      parametres_optimisation["verbose"],
+                                                      neurones_actifs_stables, neurones_inactifs_stables)
         
     elif optimization_model == "Lan_quad" :
         if parametres_optimisation["verbose"]:

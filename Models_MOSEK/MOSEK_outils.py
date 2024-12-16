@@ -1,5 +1,6 @@
 import numpy as np
 import mosek
+import matplotlib.pyplot as plt
 
 
 def return_k_j_from_i(i,n):
@@ -70,3 +71,33 @@ def adapte_parametres_mosek(task : mosek.Task):
     ##task.putintparam(mosek.iparam.optimizer, mosek.optimizertype.dual_simplex)
     # Limiter les threads
     task.putintparam(mosek.iparam.num_threads, 2)
+
+
+def affiche_matrice(T, model):
+    """
+    Plot a 2D matrix with values rounded to two decimal places and columns aligned.
+
+    Parameters:
+        T (list[list] or np.ndarray): 2D array (matrix) to be plotted.
+    """
+    
+    T = np.array(T)
+    n_rows, n_cols = T.shape
+    fig, ax = plt.subplots()
+    ax.axis('off')
+    ax.set_title(model, fontsize=14, pad=20)
+
+    # Create the table
+    table_data = [[f"{T[i, j]:.2f}" for j in range(n_cols)] for i in range(n_rows)]
+    table = ax.table(cellText=table_data, loc='center', cellLoc='center')
+
+    # Set column width and row height for better visibility
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.auto_set_column_width(col=list(range(n_cols)))
+    
+    plt.savefig(f"Matrice_solution_MOSEK_{model}", bbox_inches='tight', dpi=300)
+    plt.close()
+
+
+

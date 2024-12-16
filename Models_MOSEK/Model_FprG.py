@@ -169,8 +169,9 @@ def solveFprG_SDP(
 
             # Contrainte X00 = 1
             num_contrainte = contrainte_premier_terme_egal_a_1(task,K,2,num_contrainte)
-            #if verbose : 
-            print("Nombre de contraintes actuelles apres X00=1 : ", num_contrainte)
+             
+            if verbose : 
+                print("Nombre de contraintes actuelles apres X00=1 : ", num_contrainte)
 
 
             # Contrainte 11 : Enveloppes de McCormick sur zk^2
@@ -306,7 +307,7 @@ def test():
     u = 150
     lb = -15
 
-    #Res = Reseau(K, n, W_reverse, b)
+    Res = Reseau(K, n, W_reverse, b)
 
     x0 = [0.6, -0.3, 0.4]
     y0 = Res.retourne_label(x0)

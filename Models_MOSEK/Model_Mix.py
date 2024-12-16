@@ -58,6 +58,8 @@ def solveMix_SDP(
     rho : float,
     coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "RLT_Lan" : True},
     verbose : bool = True,
+    neurones_actifs_stables : List = [],
+    neurones_inactifs_stables : List = []
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -105,7 +107,9 @@ def solveMix_SDP(
 
             # ***** Contrainte 2 :  zk+1 >= Wk zk + bk ********************
             # ***** Contrainte 3 :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
-            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte)
+            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,
+                                                 neurones_actifs_stables=neurones_actifs_stables,
+                                                 neurones_inactifs_stables=neurones_inactifs_stables)
 
             # ***** Contrainte 4 :   zK+1 == WK zK + bK *****
             num_contrainte = contrainte_derniere_couche_lineaire(task,K,n,W,b,num_contrainte)

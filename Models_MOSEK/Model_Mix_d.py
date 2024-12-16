@@ -10,7 +10,8 @@ from MOSEK_objective import (
 )
 from MOSEK_outils import(
     reconstitue_matrice,
-    adapte_parametres_mosek
+    adapte_parametres_mosek,
+    affiche_matrice
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_somme_beta_egale_1,
@@ -64,6 +65,8 @@ def solveMix_SDP_objbetas(
     rho : float,
     coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "RLT_Lan" : True},
     verbose  : bool = True,
+    neurones_actifs_stables : List = [],
+    neurones_inactifs_stables : List = []
 ):
     def streamprinter(text):
         if verbose : 
@@ -111,50 +114,62 @@ def solveMix_SDP_objbetas(
 
             # ***** Contrainte 1 :  zk+1 >= Wk zk + bk ********************
             # ***** Contrainte 2 :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
-            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte)
-            print("Nombre de contraintes après contrainte 1-2", num_contrainte)
+            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,
+                                                 neurones_actifs_stables=neurones_actifs_stables,
+                                                 neurones_inactifs_stables=neurones_inactifs_stables)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 1-2", num_contrainte)
 
             # ***** Contrainte 3 :   zK+1 == WK zK + bK *******************
             num_contrainte = contrainte_derniere_couche_lineaire(task,K,n,W,b,num_contrainte)
-            print("Nombre de contraintes après contrainte 3", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 3", num_contrainte)
 
             # ***** Contrainte 4 : somme(betaj) = 1 ***********************
             num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,K,n,ytrue,U,rho,num_contrainte, 
                                                                            par_couches=False, betas_z_unis=True)
-            print("Nombre de contraintes après contrainte 4", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 4", num_contrainte)
 
             # ***** Contrainte 5 : betaj zj >= betaj zjtrue **************
             num_contrainte = contrainte_exemple_adverse_beta_produit_simple(task,K,n,ytrue,U,rho,num_contrainte)
-            print("Nombre de contraintes après contrainte 5", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 5", num_contrainte)
 
             # ***** Contrainte 6 :   betaj == 0 ou betaj ==1  *************
             num_contrainte = contrainte_beta_discret(task,K,n,ytrue,num_contrainte, 
                                                      par_couches = False, betas_z_unis = True)
-            print("Nombre de contraintes après contrainte 6", num_contrainte)
+            if verbose: 
+                print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
             num_contrainte = contrainte_borne_betas(task,K,n,ytrue,U,L,rho,num_contrainte,
                                                     par_couches = False, betas_z_unis= True)
-            print("Nombre de contraintes après contrainte 7", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 7", num_contrainte)
 
             # ***** Contrainte 7bis : 0 <= betaj zK_j <= U betaj, 0 <= betaj zK_j <= zK_j
             num_contrainte = contrainte_borne_betas_unis(task,K,n,ytrue,U,L,rho,num_contrainte,
                                                          par_couches= False)
-            print("Nombre de contraintes après contrainte 7bis", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 7bis", num_contrainte)
             
 
             # ***** Contrainte 8 :   Bornes sur les zkj hidden layers   *****
             # num_contrainte = contrainte_borne_couches_internes(task,K,n,U,num_contrainte)
             num_contrainte = contrainte_quadratique_bornes(task,K,n,L,U,x0,epsilon,num_contrainte)
-            print("Nombre de contraintes après contrainte 8", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 8", num_contrainte)
 
             # ***** Contrainte 9 :   x - epsilon < z0 < x + epsilon  *****
             num_contrainte = contrainte_boule_initiale(task,n,x0,epsilon,U,L,num_contrainte)
-            print("Nombre de contraintes après contrainte 9", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 9", num_contrainte)
 
             # Contrainte 10 : X00 = 1 (Le premier terme de la matrice variable est 1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,K,1,num_contrainte)
-            print("Nombre de contraintes après contrainte 10", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 10", num_contrainte)
             # ***********************************************
             # ************ COUPES ***************************
             # ***********************************************
@@ -174,7 +189,8 @@ def solveMix_SDP_objbetas(
                 num_contrainte = contrainte_Mc_Cormick_betai_zkj(task, K, n, ytrue, U, num_contrainte)
             
             #print("Nombre de contraintes après contrainte McCormick betai zkj", num_contrainte)
-            print("Nombre de contraintes : ", num_contrainte)
+            if verbose : 
+                print("Nombre final de contraintes : ", num_contrainte)
 
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
@@ -193,18 +209,39 @@ def solveMix_SDP_objbetas(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
+
+            z_sol = task.getbarxj(mosek.soltype.itr, 0)
+
+            z = reconstitue_matrice(sum(n) + n[K], z_sol)
+            
+            print(
+                "z : ",
+                [
+                    [round(z[i][j], 2) for j in range(sum(n) + 1)]
+                    for i in range(sum(n) + 1)
+                ],
+            )
+
+            print(
+                "z et betas : ",
+                [
+                    [round(z[i][j], 2) for j in range(sum(n) + n[K])]
+                    for i in range(sum(n) + n[K])
+                ],
+            )
+            affiche_matrice(z, "Mix_d")
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
 
                 z = reconstitue_matrice(sum(n) + n[K], z_sol)
-                if verbose:
-                    print(
-                        "z : ",
-                        [
-                            [round(z[i][j], 2) for j in range(sum(n) + 1)]
-                            for i in range(sum(n) + 1)
-                        ],
-                    )
+                
+                print(
+                    "z : ",
+                    [
+                        [round(z[i][j], 2) for j in range(sum(n) + 1)]
+                        for i in range(sum(n) + 1)
+                    ],
+                )
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

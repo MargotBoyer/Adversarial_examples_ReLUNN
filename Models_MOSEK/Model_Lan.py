@@ -57,6 +57,8 @@ def solve_Lan(
     rho : float,
     coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "RLT_Lan" : True},
     verbose : bool = True,
+    neurones_actifs_stables : List = [],
+    neurones_inactifs_stables : List = []
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -97,7 +99,9 @@ def solve_Lan(
 
             # ***** Contrainte 1 :  zk+1 >= Wk zk + bk ********************
             # ***** Contrainte 2 :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
-            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte)
+            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,
+                                                 neurones_actifs_stables=neurones_actifs_stables,
+                                                 neurones_inactifs_stables=neurones_inactifs_stables)
 
             # ***** Contrainte 4 :   zK+1 == WK zK + bK *****
             num_contrainte = contrainte_derniere_couche_lineaire(task,K,n,W,b,num_contrainte)
@@ -110,7 +114,8 @@ def solve_Lan(
 
             # Contrainte 7 : X00 = 1 (Le premier terme de la matrice variable est 1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,K,1,num_contrainte)
-            print("num contrainte apres XOO = 1 : ", num_contrainte)
+            if verbose : 
+                print("num contrainte apres XOO = 1 : ", num_contrainte)
             # ***********************************************
             # ************ COUPES ***************************
             # ***********************************************
@@ -123,7 +128,8 @@ def solve_Lan(
                 num_contrainte = coupes_RLT_LAN(task,K,n,W,b,x0,epsilon,L,U,num_contrainte)
                 print("num contrainte apres RLT : ", num_contrainte)
 
-            print("Nombre de contraintes : ", num_contrainte)
+            if verbose : 
+                print("Nombre final de contraintes : ", num_contrainte)
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 

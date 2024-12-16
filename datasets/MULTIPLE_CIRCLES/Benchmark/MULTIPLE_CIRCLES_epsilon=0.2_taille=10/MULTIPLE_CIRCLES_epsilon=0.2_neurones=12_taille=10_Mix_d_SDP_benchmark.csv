@@ -1,0 +1,2 @@
+modele_data,x0,x0_id,y0,ycible,modele_opt,relax,Status,Sol,Label,Valeur_optimale,temps_execution,RLT_Lan,zk^2,betai*betaj,sigmak*zk,betai*zkj,Number_Nodes
+MULTIPLE_CIRCLES,"tensor([-0.5790, -0.1315])",9,0,1,Mix_diff_obj_quad,True,1,"[-0.7789822816848755, 0.06846511363983164]",1,-1.4031681513069376,0.0280001163482666,False,False,False,False,False,19.0

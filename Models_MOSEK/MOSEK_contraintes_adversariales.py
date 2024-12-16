@@ -471,7 +471,7 @@ def contrainte_borne_betas_unis(
                 [1/2, -1/2],
             )
         # Bornes
-        task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-U[K][j]], [0])
+        task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-inf], [0])
         num_contrainte += 1
 
     
@@ -504,7 +504,7 @@ def contrainte_borne_betas_unis(
                 [1/2, -U[K][j]/2],
             )
         # Bornes
-        task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-U[K][j]], [0])
+        task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-inf], [0])
         num_contrainte += 1
     return num_contrainte
 

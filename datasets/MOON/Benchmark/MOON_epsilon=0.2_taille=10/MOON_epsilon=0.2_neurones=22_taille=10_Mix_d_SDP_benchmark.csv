@@ -1,0 +1,2 @@
+modele_data,x0,x0_id,y0,ycible,modele_opt,relax,Status,Sol,Label,Valeur_optimale,temps_execution,RLT_Lan,zk^2,betai*betaj,sigmak*zk,betai*zkj,Number_Nodes
+MOON,"tensor([2.9540, 2.3073])",6,0,1,Mix_diff_obj_quad,True,1,"[3.153995990753174, 2.097323455810547]",1,-1.5687288218933793,0.011999845504760742,False,False,False,False,False,1.0

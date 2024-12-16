@@ -60,6 +60,8 @@ def solve_Lan_couches(
     rho : float,
     coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "RLT_Lan" : True},
     verbose : bool = True,
+    neurones_actifs_stables : List = [],
+    neurones_inactifs_stables : List = []
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -101,7 +103,9 @@ def solve_Lan_couches(
 
             # ***** Contrainte 1 :  zk+1 >= Wk zk + bk ********************
             # ***** Contrainte 2 :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
-            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,par_couches=True)
+            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,par_couches=True, 
+                                                 neurones_actifs_stables=neurones_actifs_stables,
+                                                 neurones_inactifs_stables=neurones_inactifs_stables)
 
             # ***** Contrainte 3 :   zK+1 == WK zK + bK *****
             num_contrainte = contrainte_derniere_couche_lineaire(task,K,n,W,b,num_contrainte,par_couches=True)
@@ -114,11 +118,13 @@ def solve_Lan_couches(
 
             # ***** Contrainte 6 : Pk[zk+1] == Pk+1[zk+1] ****************************
             num_contrainte = contrainte_recurrence_matrices_couches(task,K,n,num_contrainte)
-            print("Nombre de contraintes après contrainte 6", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # Contrainte 7 : X00 = 1 (Le premier terme de la matrice variable est 1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,K,K-1,num_contrainte)
-            print("Nombre de contraintes après XOO = 1 : ", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après XOO = 1 : ", num_contrainte)
             # ***********************************************
             # ************ COUPES ***************************
             # ***********************************************
@@ -131,7 +137,8 @@ def solve_Lan_couches(
                 num_contrainte = coupes_RLT_LAN(task,K,n,W,b,x0,epsilon,L,U,num_contrainte,par_couches=True)
                 print("num contrainte apres RLT : ", num_contrainte)
 
-            print("Nombre de contraintes ajoutées dans le modèle : ", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes ajoutées dans le modèle : ", num_contrainte)
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 

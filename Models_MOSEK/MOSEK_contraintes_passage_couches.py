@@ -184,48 +184,70 @@ def contrainte_ReLU_Mix(
         W : List[List[List[float]]], 
         b : List[List[float]], 
         num_contrainte : int, 
-        par_couches : bool = False):
+        par_couches : bool = False,
+        neurones_actifs_stables : List = [],
+        neurones_inactifs_stables : List = []):
     """A combiner avec la contrainte sur les bornes des zk pour les couches internes (avec zk >= 0)"""
     # ***** Contrainte :  zk+1 >= Wk zk + bk *****
     # ***** Nombre de contraintes : 2 * sum(n[1:K]) *****************
     for k in range(1, K):
         for j in range(n[k]):
-            if par_couches:
-                A2_k = [(1 + i) for i in range(n[k - 1])] + [1 + n[k - 1] + j]
-                A2_l = [0] * (n[k - 1] + 1)
-                A2_v = [-W[k - 1][j][i] / 2 for i in range(n[k - 1])] + [1 / 2]
+            # Traitement des neurones stables *******************************
+            if (k, j) in neurones_actifs_stables:
+                if par_couches :
+                    A2_k = [1+n[k-1]+j] + [(1+i) for i in range(n[k - 1])]
+                    A2_l = [0] * (len(A2_k))
+                    A2_v = [1/2] + [-(W[k-1][j][i])/2 for i in range(n[k - 1])]
+                    task.putbarablocktriplet( [num_contrainte] * len(A2_k), [k-1] * len(A2_k),
+                    A2_k, A2_l, A2_v)
+                else : 
+                    idx_k_prec = return_i_from_k_j__variable_z(k - 1, 0, n)
+                    idx_k_j = return_i_from_k_j__variable_z(k, j, n)
+                    A2_k = [idx_k_j] + [(idx_k_prec+i) for i in range(n[k - 1])]
+                    A2_l = [0] * (len(A2_k))
+                    A2_v = [1/2] + [-(W[k-1][j][i])/2 for i in range(n[k - 1])]
+                    task.putbarablocktriplet( [num_contrainte] * len(A2_k), [0] * len(A2_k),
+                        A2_k, A2_l, A2_v)
+                task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [b[k - 1][j]], [b[k - 1][j]])
+                num_contrainte += 1
+                continue
+            elif (k,j) in neurones_inactifs_stables:
+                if par_couches : 
+                    task.putbarablocktriplet( [num_contrainte], [k-1],
+                    [1 + n[k - 1] + j], [0], [1])
+                else :
+                    task.putbarablocktriplet( [num_contrainte], [0],
+                    [return_i_from_k_j__variable_z(k, j, n)], [0], [1])
+                task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [0], [0])
+                num_contrainte += 1
+                continue
 
-                task.putbarablocktriplet(
-                    [num_contrainte] * (len(A2_k)),
-                    [k-1] * (len(A2_k)),
-                    A2_k,
-                    A2_l,
-                    A2_v,
-                )
-
-            else:
-                idx = return_i_from_k_j__variable_z(k - 1, 0, n)
-                A2_k = [(idx + i) for i in range(n[k - 1])] + [
-                    return_i_from_k_j__variable_z(k, j, n)
-                ]
-                A2_l = [0] * (n[k - 1] + 1)
-                A2_v = [-W[k - 1][j][i] / 2 for i in range(n[k - 1])] + [1 / 2]
-
-                task.putbarablocktriplet(
-                    [num_contrainte] * (len(A2_k)),
-                    [0] * (len(A2_k)),
-                    A2_k,
-                    A2_l,
-                    A2_v,
-                )
-            task.putconboundlist(
-                [num_contrainte], [mosek.boundkey.lo], [b[k - 1][j]], [inf]
-            )
+            # ***************** Traitement des neurones instables *******************************
+            if par_couches :
+                    A2_k = [1+n[k-1]+j] + [(1+i) for i in range(n[k - 1])]
+                    A2_l = [0] * (len(A2_k))
+                    A2_v = [1/2] + [-(W[k-1][j][i])/2 for i in range(n[k - 1])]
+                    task.putbarablocktriplet( [num_contrainte] * len(A2_k), [k-1] * len(A2_k),
+                    A2_k, A2_l, A2_v)
+            else : 
+                idx_k_prec = return_i_from_k_j__variable_z(k - 1, 0, n)
+                idx_k_j = return_i_from_k_j__variable_z(k, j, n)
+                A2_k = [idx_k_j] + [(idx_k_prec+i) for i in range(n[k - 1])]
+                A2_l = [0] * (len(A2_k))
+                A2_v = [1/2] + [-(W[k-1][j][i])/2 for i in range(n[k - 1])]
+                task.putbarablocktriplet( [num_contrainte] * len(A2_k), [0] * len(A2_k),
+                    A2_k, A2_l, A2_v)
+            task.putconboundlist([num_contrainte], [mosek.boundkey.lo], [b[k - 1][j]], [inf])
             num_contrainte += 1
+            continue
 
     # ***** Contrainte :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
     for k in range(1, K):
         for j in range(n[k]):
+            # La contrainte des neurones stables a déjà été traitée *******************************
+            if (k,j) in neurones_actifs_stables+neurones_inactifs_stables:
+                continue
+            # ************  Traitement des neurones instables *******************************
             if par_couches:
                 A3_k = (
                     [1 + n[k - 1] + j]

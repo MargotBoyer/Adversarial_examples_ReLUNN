@@ -135,12 +135,14 @@ def solveFprG_SDP_Adv2(
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
             num_contrainte = contrainte_borne_betas(task,K,n,ytrue,U,L,rho,num_contrainte,
                                                     sigmas = True, par_couches = False, betas_z_unis= True)
-            print("Nombre de contraintes après contrainte 7 : ", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 7 : ", num_contrainte)
 
             # ***** Contrainte 8 : 0 <= betaj zK_j <= U betaj, 0 <= betaj zK_j <= zK_j
             num_contrainte = contrainte_borne_betas_unis(task,K,n,ytrue,U,L,rho,num_contrainte,
                                                          sigmas = True, par_couches= False)
-            print("Nombre de contraintes après contrainte 8 : ", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes après contrainte 8 : ", num_contrainte)
 
             # ***** Contrainte 9 :   x - epsilon < z0 < x + epsilon  *****
             num_contrainte = contrainte_boule_initiale(
