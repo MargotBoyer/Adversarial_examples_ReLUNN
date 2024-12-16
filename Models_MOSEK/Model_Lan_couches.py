@@ -154,7 +154,7 @@ def solve_Lan_couches(
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z,"Lan_SDP",titre)
+                affiche_matrice(cert,z,"Lan_couches_SDP",titre)
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

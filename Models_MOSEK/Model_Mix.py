@@ -10,7 +10,8 @@ from MOSEK_objective import (
 )
 from MOSEK_outils import(
     reconstitue_matrice,
-    adapte_parametres_mosek
+    adapte_parametres_mosek,
+    affiche_matrice
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
@@ -45,21 +46,10 @@ inf = 10e5
 
 
 def solveMix_SDP(
-    K : int,
-    n : List[int],
-    x0 : List[float],
-    ytrue : int,
-    ycible : int,
-    U : List[List[float]],
-    L : List[List[float]],
-    W : List[List[List[float]]],
-    b : List[List[float]],
-    epsilon : float,
-    rho : float,
-    coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "RLT_Lan" : True},
-    verbose : bool = True,
-    neurones_actifs_stables : List = [],
-    neurones_inactifs_stables : List = []
+    cert,
+    coupes: Dict[str, bool], 
+    titre : str,
+    verbose : bool =True
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -73,19 +63,19 @@ def solveMix_SDP(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(n[1:K]) * 2 + 3 * n[K] + sum(n[1:K]) + n[0] + 1 + n[0]
+            numcon = sum(cert.n[1:cert.K]) * 2 + 3 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + 1 + cert.n[0]
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
-                numcon += (2 * sum(n[1:K]) + 3 * n[0])
+                numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout contrainte sur les betas linearisation par Fortet
-            if n[K] > 2 and coupes["betai*betaj"]:
-                numcon += (3 * (int(n[K]) - 1) * (int(n[K]) - 2) // 2)
+            if cert.n[cert.K] > 2 and coupes["betai*betaj"]:
+                numcon += (3 * (int(cert.n[cert.K]) - 1) * (int(cert.n[cert.K]) - 2) // 2)
             # Ajout contrainte RLT Lan
             if coupes["RLT_Lan"]:
                 if verbose :
                     print("AJOUT CONTRAINTES RLT")
-                numcon += (3 * sum(n[k]*n[k+1] for k in range(K)) + sum(n[1:K]) 
-                           + 2 * sum((n[k])*(n[k]-1)//2 for k in range(1,K)))
+                numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
+                           + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
             print('numcon total : ', numcon)
             # Ajoute 'numcon' contraintes vides.
@@ -93,13 +83,13 @@ def solveMix_SDP(
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
-            task.appendbarvars([sum(n) + 1])
-            task.appendbarvars([n[K]])
+            task.appendbarvars([sum(cert.n) + 1])
+            task.appendbarvars([cert.n[cert.K]])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
 
             # ------------ FONCTION OBJECTIF ------------------------------------
-            objective_function_diff(task,K,n,ytrue,numvar)
+            objective_function_diff(task,cert.K,cert.n,cert.y0,numvar)
             # --------------------------------------------------------------------
 
             # ------------ CONTRAINTES RELU  ------------------------------------
@@ -107,47 +97,47 @@ def solveMix_SDP(
 
             # ***** Contrainte 2 :  zk+1 >= Wk zk + bk ********************
             # ***** Contrainte 3 :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
-            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,
-                                                 neurones_actifs_stables=neurones_actifs_stables,
-                                                 neurones_inactifs_stables=neurones_inactifs_stables)
+            num_contrainte = contrainte_ReLU_Mix(task,cert.K,cert.n,cert.W,cert.b,num_contrainte,
+                                                 neurones_actifs_stables = cert.neurones_actifs_stables,
+                                                 neurones_inactifs_stables = cert.neurones_inactifs_stables)
 
             # ***** Contrainte 4 :   zK+1 == WK zK + bK *****
-            num_contrainte = contrainte_derniere_couche_lineaire(task,K,n,W,b,num_contrainte)
+            num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte)
 
             # ***** Contrainte 5 :  u (1 - betaj) + zKj > zKj*  *****  
-            num_contrainte = contrainte_exemple_adverse_beta_u(task,K,n,ytrue,U,rho,num_contrainte)
+            num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte)
             # ***** Contrainte 6 : somme(betaj) > 1 *****************
-            num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(task,K,n,ytrue,U,rho,num_contrainte,
+            num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte,
                                                                                 par_couches= False, betas_z_unis= False)
 
             # ***** Contrainte 7 :   betaj == 0 ou betaj ==1  *****
-            num_contrainte = contrainte_beta_discret(task,K,n,ytrue,num_contrainte,
+            num_contrainte = contrainte_beta_discret(task,cert.K,cert.n,cert.y0,num_contrainte,
                                                      par_couches= False, betas_z_unis= False)
 
             # ***** Contrainte 8 :   Bornes sur les zkj hidden layers   *****
             #num_contrainte = contrainte_borne_couches_internes(task,K,n,U,num_contrainte)
-            num_contrainte = contrainte_quadratique_bornes(task,K,n,L,U,x0,epsilon,num_contrainte)
+            num_contrainte = contrainte_quadratique_bornes(task,cert.K,cert.n,cert.L,cert.U,cert.x0,cert.epsilon,num_contrainte)
 
             # ***** Contrainte 9 :   x - epsilon < z0 < x + epsilon  *****
-            num_contrainte = contrainte_boule_initiale(task,n,x0,epsilon,U,L,num_contrainte)
+            num_contrainte = contrainte_boule_initiale(task,cert.n,cert.x0,cert.epsilon,cert.U,cert.L,num_contrainte)
 
             # Contrainte 10 : X00 = 1 (Le premier terme de la matrice variable est 1)
-            num_contrainte = contrainte_premier_terme_egal_a_1(task,K,2,num_contrainte)
+            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,2,num_contrainte)
             print("num contrainte apres XOO = 1 : ", num_contrainte)
             # ***********************************************
             # ************ COUPES ***************************
             # ***********************************************
             # Contrainte 11 : Bornes sur zk^2 (RLT)
             if coupes["zk^2"]:
-                num_contrainte = contrainte_McCormick_zk2(task, K, n, x0, U, epsilon, num_contrainte)
+                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte)
                 print("num contrainte apres zk2 : ", num_contrainte)
             if coupes["betai*betaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
-                num_contrainte = contrainte_Mc_Cormick_betai_betaj(task,K,n,ytrue,num_contrainte, 
+                num_contrainte = contrainte_Mc_Cormick_betai_betaj(task, cert.K, cert.n, cert.y0,num_contrainte, 
                                                                    par_couches= False)
                 print("num contrainte apres beta : ", num_contrainte)
             if coupes["RLT_Lan"]:
-                num_contrainte = coupes_RLT_LAN(task,K,n,W,b,x0,epsilon,L,U,num_contrainte)
+                num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte)
                 print("num contrainte apres RLT : ", num_contrainte)
 
             print("Nombre de contraintes : ", num_contrainte)
@@ -178,15 +168,18 @@ def solveMix_SDP(
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 beta_sol = task.getbarxj(mosek.soltype.itr, 1)
 
-                z = reconstitue_matrice(sum(n) + 1, z_sol)
-                beta = reconstitue_matrice(n[K], beta_sol)
+                z = reconstitue_matrice(sum(cert.n) + 1, z_sol)
+                beta = reconstitue_matrice(cert.n[cert.K], beta_sol)
+
+                affiche_matrice(cert,z,"Mix_SDP",titre,nom_variable="z")
+                affiche_matrice(cert,beta,"Mix_SDP",titre,nom_variable="beta")
 
                 if verbose:
                     print(
                         "beta : ",
                         [
-                            [round(beta[i][j], 3) for j in range(n[K])]
-                            for i in range(n[K])
+                            [round(beta[i][j], 3) for j in range(cert.n[cert.K])]
+                            for i in range(cert.n[cert.K])
                         ],
                     )
                 #     print(
@@ -208,7 +201,7 @@ def solveMix_SDP(
                     print(f"Valeur du problème dual: {dual_obj_value}")
 
                 
-                for j in range(n[0]):
+                for j in range(cert.n[0]):
                     Sol.append(z_sol[j + 1])
                 status = 1
                 return Sol, primal_obj_value,status,  time_execution, {"Nombre_iterations" : num_iterations}
