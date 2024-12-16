@@ -163,7 +163,7 @@ class Certification_Problem(abc.ABC):
             if not os.path.exists(folder_dir):
                 print("Creation du dossier...")
                 os.makedirs(folder_dir)
-            cert.solveFprG_SDP_Adv2(coupes, titre = self.nom)
+            cert.solve_Lan_couches_SDP(coupes, titre = self.nom)
             
 
     def create_folder_benchmark_(self,

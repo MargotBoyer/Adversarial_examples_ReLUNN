@@ -47,21 +47,11 @@ inf = 10e5
 
 
 def solve_Lan_couches(
-    K : int,
-    n : List[int],
-    x0 : List[float],
-    ytrue : int,
+    cert,
+    coupes: Dict[str, bool], 
     ycible : int,
-    U : List[List[float]],
-    L : List[List[float]],
-    W : List[List[List[float]]],
-    b : List[List[float]],
-    epsilon : float,
-    rho : float,
-    coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "RLT_Lan" : True},
-    verbose : bool = True,
-    neurones_actifs_stables : List = [],
-    neurones_inactifs_stables : List = []
+    titre : str,
+    verbose : bool =True
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -75,27 +65,27 @@ def solve_Lan_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(n[1:K]) * 3 + n[K] + sum(n[:K]) + n[0] + K - 1
+            numcon = sum(cert.n[1:cert.K]) * 3 + cert.n[cert.K] + sum(cert.n[:cert.K]) + cert.n[0] + cert.K - 1
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
-                numcon += (2 * sum(n[1:K]) + 3 * n[0])
+                numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout contrainte RLT Lan
             if coupes["RLT_Lan"]:
-                numcon += (3 * sum(n[k]*n[k+1] for k in range(K)) + sum(n[1:K]) 
-                           + 2 * sum((n[k])*(n[k]-1)//2 for k in range(1,K)))
+                numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
+                           + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
             print('Nombre de contraintes initialisées : ', numcon)
 
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici les K-1 matrices représentant les z 
-            for k in range(K):
-                task.appendbarvars([1 + n[k] + n[k+1]])
+            for k in range(cert.K):
+                task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
 
             # ------------ FONCTION OBJECTIF ------------------------------------
-            objective_function_diff_ycible(task,K,n,ytrue,ycible,numvar,par_couches=True)
+            objective_function_diff_ycible(task, cert.K, cert.n, cert.y0, ycible, numvar,par_couches=True)
             # --------------------------------------------------------------------
 
             # ------------ CONTRAINTES RELU  ------------------------------------
@@ -103,26 +93,26 @@ def solve_Lan_couches(
 
             # ***** Contrainte 1 :  zk+1 >= Wk zk + bk ********************
             # ***** Contrainte 2 :  zk+1 x (zk+1 - Wk zk - bk)  == 0  *****
-            num_contrainte = contrainte_ReLU_Mix(task,K,n,W,b,num_contrainte,par_couches=True, 
-                                                 neurones_actifs_stables=neurones_actifs_stables,
-                                                 neurones_inactifs_stables=neurones_inactifs_stables)
+            num_contrainte = contrainte_ReLU_Mix(task,cert.K,cert.n,cert.W,cert.b,num_contrainte,par_couches=True, 
+                                                 neurones_actifs_stables=cert.neurones_actifs_stables,
+                                                 neurones_inactifs_stables=cert.neurones_inactifs_stables)
 
             # ***** Contrainte 3 :   zK+1 == WK zK + bK *****
-            num_contrainte = contrainte_derniere_couche_lineaire(task,K,n,W,b,num_contrainte,par_couches=True)
+            num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte,par_couches=True)
 
             # ***** Contrainte 4 :   Bornes sur les zkj hidden layers   *****
-            num_contrainte = contrainte_quadratique_bornes(task, K, n, L, U, x0, epsilon, num_contrainte, par_couches=True)
+            num_contrainte = contrainte_quadratique_bornes(task, cert.K, cert.n, cert.L, cert.U, cert.x0, cert.epsilon, num_contrainte, par_couches=True)
 
             # ***** Contrainte 5 :   x - epsilon < z0 < x + epsilon  *****
-            num_contrainte = contrainte_boule_initiale(task,n,x0,epsilon,U,L,num_contrainte)
+            num_contrainte = contrainte_boule_initiale(task,cert.n,cert.x0,cert.epsilon,cert.U,cert.L,num_contrainte)
 
             # ***** Contrainte 6 : Pk[zk+1] == Pk+1[zk+1] ****************************
-            num_contrainte = contrainte_recurrence_matrices_couches(task,K,n,num_contrainte)
+            num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # Contrainte 7 : X00 = 1 (Le premier terme de la matrice variable est 1)
-            num_contrainte = contrainte_premier_terme_egal_a_1(task,K,K-1,num_contrainte)
+            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K-1,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes après XOO = 1 : ", num_contrainte)
             # ***********************************************
@@ -130,11 +120,12 @@ def solve_Lan_couches(
             # ***********************************************
             # Contrainte 8 : Bornes sur zk^2 
             if coupes["zk^2"]:
-                num_contrainte = contrainte_McCormick_zk2(task, K, n, x0, U, epsilon, num_contrainte,par_couches=True)
+                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte,par_couches=True)
                 print("num contrainte apres zk2 : ", num_contrainte)
             # Contrainte 9 : Contraintes RLT
             if coupes["RLT_Lan"]:
-                num_contrainte = coupes_RLT_LAN(task,K,n,W,b,x0,epsilon,L,U,num_contrainte,par_couches=True)
+                num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon,
+                                                cert.L, cert.U,num_contrainte,par_couches=True)
                 print("num contrainte apres RLT : ", num_contrainte)
 
             if verbose : 
@@ -161,7 +152,7 @@ def solve_Lan_couches(
                 # Assuming the optimization succeeded read solution
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
-                z = reconstitue_matrice(1 + n[0] + n[1], z_sol)
+                z = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)
@@ -174,7 +165,7 @@ def solve_Lan_couches(
                     print(f"Valeur du problème dual: {dual_obj_value}")
 
                 
-                for j in range(n[0]):
+                for j in range(cert.n[0]):
                     Sol.append(z_sol[j + 1])
                 status = 1
                 return Sol, primal_obj_value,status,  time_execution, {"Nombre_iterations" : num_iterations}

@@ -73,7 +73,7 @@ def adapte_parametres_mosek(task : mosek.Task):
     task.putintparam(mosek.iparam.num_threads, 2)
 
 
-def affiche_matrice(cert, T, model, titre):
+def affiche_matrice(cert, T, model, titre, nom_variable = ""):
     """
     Plot a 2D matrix with values rounded to two decimal places and columns aligned.
 
@@ -96,7 +96,7 @@ def affiche_matrice(cert, T, model, titre):
     table.set_fontsize(10)
     table.auto_set_column_width(col=list(range(n_cols)))
     
-    plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}", bbox_inches='tight', dpi=300)
+    plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}", bbox_inches='tight', dpi=300)
     plt.close()
 
 
