@@ -8,7 +8,8 @@ from typing import Dict
 from MOSEK_objective import objective_function_diff_betas
 from MOSEK_outils import (
     reconstitue_matrice,
-    adapte_parametres_mosek
+    adapte_parametres_mosek,
+    affiche_matrice
     )
 from MOSEK_contraintes_adversariales import (
     contrainte_exemple_adverse_somme_beta_egale_1,
@@ -46,8 +47,7 @@ inf = 10e5
 # MODELE PAS ENCORE COMPLET!!
 
 def solveFprG_SDP_Adv2(
-    K, n, x0, ytrue, ycible, U, L, W, b, epsilon, rho, relax, 
-    coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "sigmak*zk" : True, "RLT_Lan" : False}, verbose=1
+    cert, coupes : Dict, titre, verbose=True
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -62,20 +62,20 @@ def solveFprG_SDP_Adv2(
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
             numcon = (
-                sum(n[1:K]) * 6 + 5 * n[K] + n[0] - 2
+                sum(cert.n[1:cert.K]) * 6 + 5 * cert.n[cert.K] + cert.n[0] - 2
             )
             # Ajout enveloppe de McCormick
             if coupes["zk^2"] :
-                numcon+= (2 * sum(n[1:K]) + 3 * n[0])
+                numcon+= (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout enveloppe sur les betas linearisation par Fortet
-            if n[K] > 2 and coupes["betai*betaj"]:
-                numcon += (3 * (int(n[K]) - 1) * (int(n[K]) - 2) // 2)
+            if cert.n[cert.K] > 2 and coupes["betai*betaj"]:
+                numcon += (3 * (int(cert.n[cert.K]) - 1) * (int(cert.n[cert.K]) - 2) // 2)
             # Ajout enveloppe de McCormick sur les zkj * sigmakj
             if coupes["sigmak*zk"] :
-                numcon +=  (3 * sum(n[1:K]))
+                numcon +=  (3 * sum(cert.n[1:cert.K]))
             if coupes["RLT_Lan"]:
-                numcon += (3 * sum(n[k]*n[k+1] for k in range(K)) + sum(n[1:K]) 
-                           + 2 * sum((n[k])*(n[k]-1)//2 for k in range(1,K)))
+                numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
+                           + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
             
             if verbose :
@@ -86,7 +86,7 @@ def solveFprG_SDP_Adv2(
 
             # Ajout des variables SDP
             task.appendbarvars(
-                [sum(n) + sum(n[1:K]) + n[K] + 1]
+                [sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K] + 1]
             )  # Matrice des z, des sigmas et des betas
             
 
@@ -94,7 +94,7 @@ def solveFprG_SDP_Adv2(
             task.appendvars(numvar)
 
             # ------------ FONCTION OBJECTIF ------------------------------------
-            objective_function_diff_betas(task,K,n,ytrue,numvar,sigmas=True,par_couches=False)
+            objective_function_diff_betas(task,cert.K,cert.n,cert.y0,numvar,sigmas=True,par_couches=False)
             # --------------------------------------------------------------------
 
             # ------------ CONTRAINTES RELU  ------------------------------------
@@ -104,49 +104,49 @@ def solveFprG_SDP_Adv2(
             # ***** Contrainte 1,2 : l (1-sigma) <= Wz+b <= u sigma *****
             # ***** Contrainte 3 : sigmaK x (WK zK + bK) = zK+1 *****
             num_contrainte = contrainte_ReLU_Glover(
-                task, K, n, W, b, U, L, num_contrainte
+                task, cert.K, cert.n, cert.W, cert.b, cert.U, cert.L, num_contrainte
             )
-            num_contrainte = contrainte_sigma_borne(task,K,n,num_contrainte)
+            num_contrainte = contrainte_sigma_borne(task,cert.K,cert.n,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes actuelles apres 1,2,3 : ", num_contrainte)
 
             
             # ***** Contrainte 4 : La derniere couche est juste lineaire zK+1 = WK zK + bK *****
             num_contrainte = contrainte_derniere_couche_lineaire(
-                task, K, n, W, b, num_contrainte
+                task, cert.K, cert.n, cert.W, cert.b, num_contrainte
             )
             if verbose : 
                 print("Nombre de contraintes actuelles apres 4 : ", num_contrainte)
 
             # ***** Contrainte 5 : somme(betaj) = 1 *****************
             num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(
-                task,K,n,ytrue,U,rho,num_contrainte, par_couches = False, betas_z_unis= True
+                task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = False, betas_z_unis= True
             )
             
             if verbose : 
                 print("Nombre de contraintes actuelles apres 5 : ", num_contrainte)
 
             # ***** Contrainte 6 : les betaj sont discrets  *****
-            num_contrainte = contrainte_beta_discret(task, K, n, ytrue, num_contrainte, 
+            num_contrainte = contrainte_beta_discret(task, cert.K, cert.n, cert.y0, num_contrainte, 
                                                      par_couches = False, betas_z_unis= True)
             if verbose :
                 print("Nombre de contraintes actuelles apres 6 : ", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
-            num_contrainte = contrainte_borne_betas(task,K,n,ytrue,U,L,rho,num_contrainte,
+            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
                                                     sigmas = True, par_couches = False, betas_z_unis= True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7 : ", num_contrainte)
 
             # ***** Contrainte 8 : 0 <= betaj zK_j <= U betaj, 0 <= betaj zK_j <= zK_j
-            num_contrainte = contrainte_borne_betas_unis(task,K,n,ytrue,U,L,rho,num_contrainte,
+            num_contrainte = contrainte_borne_betas_unis(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
                                                          sigmas = True, par_couches= False)
             if verbose : 
                 print("Nombre de contraintes après contrainte 8 : ", num_contrainte)
 
             # ***** Contrainte 9 :   x - epsilon < z0 < x + epsilon  *****
             num_contrainte = contrainte_boule_initiale(
-                task, n, x0, epsilon, U, L, num_contrainte
+                task, cert.n, cert.x0, cert.epsilon, cert.U, cert.L, num_contrainte
             )
             if verbose : 
                 print("Nombre de contraintes actuelles apres 9 : ", num_contrainte)
@@ -154,25 +154,25 @@ def solveFprG_SDP_Adv2(
             
             # ***** Contrainte 10 : Bornes sur les couches internes zk *****
             num_contrainte = contrainte_borne_couches_internes(
-                task, K, n, U, num_contrainte
+                task, cert.K, cert.n, cert.U, num_contrainte
             )
             if verbose :
                 print("Nombre de contraintes actuelles apres 10 : ", num_contrainte)
 
             # ***** Contrainte 11 : *****
-            num_contrainte = contrainte_sigma_discret(task, K, n, num_contrainte)
+            num_contrainte = contrainte_sigma_discret(task, cert.K, cert.n, num_contrainte)
             if verbose : 
                 print("Nombre de contraintes actuelles apres 11 : ", num_contrainte)
 
             # Contrainte X00 = 1
-            num_contrainte = contrainte_premier_terme_egal_a_1(task,K,1,num_contrainte)
+            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,1,num_contrainte)
             print("Nombre de contraintes actuelles apres X00=1 : ", num_contrainte)
 
 
             # Contrainte 11 : Enveloppes de McCormick sur zk^2
             if coupes["zk^2"] : 
                 num_contrainte = contrainte_McCormick_zk2(
-                    task, K, n, x0, U, epsilon, num_contrainte
+                    task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte
                 )
                 #if verbose : 
                 print("Nombre de contraintes actuelles apres 11 : ", num_contrainte)
@@ -180,7 +180,7 @@ def solveFprG_SDP_Adv2(
             # Contrainte 12 : Linearisation de Fortet sur les betas
             if coupes["betai*betaj"] :
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj_unis(
-                    task, K, n, ytrue, num_contrainte, sigmas = True, par_couches= False
+                    task, cert.K, cert.n, cert.y0, num_contrainte, sigmas = True, par_couches= False
                 )
                 #if verbose :
                 print("Nombre de contraintes actuelles apres 12 : ", num_contrainte)
@@ -188,13 +188,13 @@ def solveFprG_SDP_Adv2(
             # Contrainte 13 : Enveloppes de McCormick sur le produit zkj * sigmakj
             if coupes["sigmak*zk"] : 
                 num_contrainte = contrainte_McCormick_zk_sigmak(
-                    task, K, n, U, num_contrainte
+                    task, cert.K, cert.n, cert.U, num_contrainte
                 )
                 #if verbose : 
                 print("Nombre de contraintes actuelles apres 13 : ", num_contrainte)
             
             if coupes["RLT_Lan"]:
-                num_contrainte = coupes_RLT_LAN(task,K,n,W,b,x0,epsilon,L,U,num_contrainte)
+                num_contrainte = coupes_RLT_LAN(task,cert.K,cert.n,cert.W,cert.b,cert.x0,cert.epsilon,cert.L,cert.U,num_contrainte)
                 print("Nombre de contraintes apres RLT LAN : ", num_contrainte)
             print("Nombre de contraintes : ", num_contrainte)
             # Configurer le solveur pour une optimisation
@@ -218,7 +218,8 @@ def solveFprG_SDP_Adv2(
                 # Assuming the optimization succeeded read solution
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
-                z = reconstitue_matrice(sum(n) + sum(n[1:K]) + n[K] + 1, z_sol)
+                z = reconstitue_matrice(sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K] + 1, z_sol)
+                affiche_matrice(cert, z,"FprG_d", titre)
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)
@@ -231,7 +232,7 @@ def solveFprG_SDP_Adv2(
                     print(f"Valeur du problème dual: {dual_obj_value}")
 
                 Sol = []
-                for j in range(n[0]):
+                for j in range(cert.n[0]):
                     Sol.append(z[0, j + 1])
 
                 status = 1
