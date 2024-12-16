@@ -1,3 +1,0 @@
-modele_data,x0,y0,modele_opt,relax,Status,Sol,Label,Valeur_optimale,temps_execution,RLT_Lan,zk^2,betai*betaj,sigmak*zk,Nombre_iterations
-BLOB,"[1.94, 1.95]",1,Mix_SDP,0,1,"[-0.4892354835846546, -1.0499999381528087]",1,3.92698322788586,0.02267742156982422,False,True,False,False,16
-BLOB,"[1.94, 1.95]",1,Mix_SDP_different_objectif,0,1,"[-0.4479727399022991, -0.9089784408725206]",1,4.453771298334416,0.012104511260986328,False,True,False,False,24
