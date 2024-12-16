@@ -10,7 +10,8 @@ from MOSEK_objective import (
 )
 from MOSEK_outils import(
     reconstitue_matrice,
-    adapte_parametres_mosek
+    adapte_parametres_mosek,
+    affiche_matrice
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
@@ -153,6 +154,7 @@ def solve_Lan_couches(
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
+                affiche_matrice(cert,z,"Lan_SDP",titre)
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

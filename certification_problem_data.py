@@ -14,9 +14,12 @@ from calcule_bornes_reseau import (
 )
 from comparaison_modeles_outils import compute_adverse
 from Models_gurobi.GUROBI_outils import parametres_gurobi
+
 import Models_MOSEK.Model_FprG_d as MOSEK_FprG_d
 import Models_MOSEK.Model_FprG as MOSEK_FprG
 import Models_MOSEK.Model_Lan_couches as MOSEK_Lan_couches
+import Models_MOSEK.Model_Lan as MOSEK_Lan
+import Models_MOSEK.Model_Mix_couches as MOSEK_Mix_couches
 
 
 optimization_models_lineaires = ["Glover_Obj_diff","Fischetti_Obj_diff","Fischetti_Obj_dist","ReLUconvexe_Adv1"]
@@ -393,6 +396,12 @@ class Certification_Problem_Data:
         ycible = cherche_ycible(self.y0, self.n[self.K])
         return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre)
     
+    def solve_Lan_SDP(self, coupes, titre):
+        ycible = cherche_ycible(self.y0, self.n[self.K])
+        return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre)
+    
+    def solve_Mix_couches_SDP(self, coupes, titre):
+        return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre)
 
     def update_resultats(self, optimization_model: str, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos):
         label = -1
