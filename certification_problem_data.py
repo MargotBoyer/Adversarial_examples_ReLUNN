@@ -20,6 +20,7 @@ import Models_MOSEK.Model_FprG as MOSEK_FprG
 import Models_MOSEK.Model_Lan_couches as MOSEK_Lan_couches
 import Models_MOSEK.Model_Lan as MOSEK_Lan
 import Models_MOSEK.Model_Mix_couches as MOSEK_Mix_couches
+import Models_MOSEK.Model_Mix_d_couches as MOSEK_Mix_d_couches
 
 
 optimization_models_lineaires = ["Glover_Obj_diff","Fischetti_Obj_diff","Fischetti_Obj_dist","ReLUconvexe_Adv1"]
@@ -402,6 +403,9 @@ class Certification_Problem_Data:
     
     def solve_Mix_couches_SDP(self, coupes, titre):
         return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre)
+    
+    def solve_Mix_d_couches_SDP(self,coupes,titre):
+        return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre)
 
     def update_resultats(self, optimization_model: str, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos):
         label = -1
