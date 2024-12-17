@@ -23,7 +23,8 @@ import Models_MOSEK.Model_Mix_couches as MOSEK_Mix_couches
 import Models_MOSEK.Model_Mix_d_couches as MOSEK_Mix_d_couches
 import Models_MOSEK.Model_Mix_d as MOSEK_Mix_d
 import Models_MOSEK.Model_Mix as MOSEK_Mix
-
+import Models_gurobi.Model_ReLU1_Adv1_Fischetti_diff as GUROBI_Fischetti_diff
+import Models_gurobi.Model_ReLU2_Adv1__FprG__ as GUROBI_FprG
 
 optimization_models_lineaires = ["Glover_Obj_diff","Fischetti_Obj_diff","Fischetti_Obj_dist","ReLUconvexe_Adv1"]
 optimization_models_quadratiques = ["Mix","FprG_quad","Mix_diff_obj_quad","Adv2_ReLU2_lin","F_ReLU1_Adv2",
@@ -414,7 +415,13 @@ class Certification_Problem_Data:
     
     def solve_Mix_SDP(self,coupes,titre):
         return MOSEK_Mix.solveMix_SDP(self,coupes,titre)
+    
+    def solve_Fischetti_diff(self,relax,titre):
+        return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre)
 
+    def solve_FprG(self,relax,titre):
+        return GUROBI_FprG.solveFprG_quad(self,relax,titre)
+    
     def update_resultats(self, optimization_model: str, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos):
         label = -1
         if Sol != []:
@@ -443,6 +450,7 @@ class Certification_Problem_Data:
                 print(f"Modèle d'optimisation : {optimization_model};       Status : {status},   Valeur : {opt},       temps : {round(execution_time,3)}")
             else :
                 print(f"Modèle d'optimisation : {optimization_model};       Status : {status},   Valeur : {opt},      Sol : {Sol},   temps : {round(execution_time,3)}")
+
         
 
         

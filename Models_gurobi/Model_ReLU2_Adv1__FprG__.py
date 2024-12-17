@@ -24,19 +24,10 @@ from GUROBI_contraintes import (
 
 
 def solveFprG_quad(
-    K : int, 
-    n : List[int], 
-    x0 : List[float], 
-    ytrue : int, 
-    U : List[List[float]], 
-    L : List[List[float]], 
-    W : List[List[List[float]]], 
-    b : List[List[float]], 
-    epsilon : float, 
-    epsilon_adv : float, 
-    relax : bool, 
-    parametres_gurobi : bool, 
-    verbose : bool = False
+    cert, 
+       relax : bool,
+       titre : str, 
+       verbose : bool = True
 ):
     # Create a new model
     env = gp.Env(empty=True)
@@ -48,25 +39,27 @@ def solveFprG_quad(
     m = gp.Model("FprG_quad", env=env)
     adapt_parametres_gurobi(m,parametres_gurobi)
 
-    z = add_variable_z(m, K, n, L)
-    beta = add_variable_beta(m, K, n, relax)
-    sigma = add_variable_sigma(m, K, n, relax)
+    z = add_variable_z(m, cert.K, cert.n, cert.L)
+    beta = add_variable_beta(m, cert.K, cert.n, relax)
+    sigma = add_variable_sigma(m, cert.K, cert.n, relax)
 
     # -------------------- Fonction objectif --------------------#
-    add_objective_diff(m, z, W, b, K, n, ytrue)
+    add_objective_diff(m, z, cert.W_reverse, cert.b, cert.K, cert.n, cert.y0)
     # -------------------- Contraintes ---------------------------#
 
     # Contraintes sur la boule autour de la donnée initiale
-    add_initial_ball_constraints(m, z, x0, epsilon, n, L[0], U[0])
+    add_initial_ball_constraints(m, z, cert.x0, cert.epsilon, cert.n, cert.L[0], cert.U[0])
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layer_constraints_with_sigma_quad(m, z, sigma, W, b, K, n, U, L)
+    add_hidden_layer_constraints_with_sigma_quad(m, z, sigma, cert.W_reverse, cert.b, cert.K, 
+                                                 cert.n, cert.U, cert.L)
 
     # Contrainte derniere couche sans ReLU
 
     # Contraintes definissant un exemple adverse
-    add_adversarial_constraints(m, z, beta, W, b, U, K, n, ytrue, epsilon_adv)
-    add_somme_beta_superieure_1(m,beta,K,n,ytrue)
+    add_adversarial_constraints(m, z, beta, cert.W_reverse, cert.b, cert.U, cert.K, 
+                                cert.n, cert.y0, cert.rho)
+    add_somme_beta_superieure_1(m,beta,cert.K,cert.n,cert.y0)
 
     # m.printStats()
     m.write("Models_gurobi/lp/FprG_quad.lp")
@@ -86,36 +79,15 @@ def solveFprG_quad(
             print("Valeur optimale : ", round(opt, 4))
             print("CPU time :", m.runtime)
 
-        for j in range(n[0]):
+        for j in range(cert.n[0]):
             Sol.append(z[0, j].X)
-
-        if False:
-            for k in range(K + 1):
-                vector_post_activation = []
-                alphas = []
-                if k >= 1:
-                    vecteur_preactivation = []
-                for j in range(n[k]):
-                    vector_post_activation.append(z[k, j].X)
-                    if k >= 1:
-                        vecteur_preactivation.append(
-                            gp.quicksum(
-                                W[k - 1][i][j] * z[k - 1, i].X for i in range(n[k - 1])
-                            )
-                            + b[k - 1][j]
-                        )
-                        print(f" alpha {k},{j} ", sigma[k, j])
-                if k >= 1:
-                    print(f"Vecteur preactivation {k} : ", vecteur_preactivation)
-                    # print(f"Alpha {k} : ", alpha)
-                print(f"SOL couche {k} : ", vector_post_activation)
 
         status = 1
         if verbose:
             print("SOL : ", Sol)
         classes_finales = []
-        for j in range(n[K]):
-            classes_finales.append(z[K, j].X)
+        for j in range(cert.n[cert.K]):
+            classes_finales.append(z[cert.K, j].X)
         if verbose:
             print("Classes finales: ", classes_finales)
 
@@ -129,7 +101,7 @@ def solveFprG_quad(
         print("Temps limite atteint, récupération de la meilleure solution réalisable")
         if m.SolCount > 0:
             print("Solution réalisable disponible")
-            for j in range(n[0]):
+            for j in range(cert.n[0]):
                 Sol.append(z[0, j].X)
             return Sol, m.ObjBound, 2, time_execution, {"Number_Nodes" : nb_nodes}
         status = 2
