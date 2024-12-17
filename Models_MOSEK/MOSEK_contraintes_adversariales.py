@@ -27,7 +27,7 @@ def contrainte_exemple_adverse_beta_u(
         if j == ytrue:
             continue
         jbeta = return_good_j_beta(j, ytrue)
-
+        print(f"y0 : {ytrue},   j : {j},   jbeta : {jbeta}")
         if par_couches : 
             # Partie Beta
             A5_beta_k = [jbeta]
@@ -102,7 +102,7 @@ def contrainte_exemple_adverse_beta_produit_simple(
         jbeta = return_good_j_beta(j, ytrue)
 
         if par_couches : 
-            A5_k = [1 + n[K-1] + n[K] + jbeta, 1 + n[K-1] + n[K] + jbeta]
+            A5_k = [n[K-1] + n[K] + jbeta, n[K-1] + n[K] + jbeta]
             A5_l = [1 + n[K-1] + j, 1 + n[K-1] + ytrue]
             A5_v = [1/2, -1/ 2]
             task.putbarablocktriplet(

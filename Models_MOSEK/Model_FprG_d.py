@@ -86,7 +86,7 @@ def solveFprG_SDP_Adv2(
 
             # Ajout des variables SDP
             task.appendbarvars(
-                [sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K] + 1]
+                [sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K]]
             )  # Matrice des z, des sigmas et des betas
             
 
@@ -218,7 +218,7 @@ def solveFprG_SDP_Adv2(
                 # Assuming the optimization succeeded read solution
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
-                z = reconstitue_matrice(sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K] + 1, z_sol)
+                z = reconstitue_matrice(sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K], z_sol)
                 affiche_matrice(cert, z,"FprG_d", titre)
 
                 # Obtenir la valeur du problème primal

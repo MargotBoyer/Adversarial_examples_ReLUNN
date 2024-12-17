@@ -168,17 +168,17 @@ class Certification_Problem(abc.ABC):
             if not os.path.exists(folder_dir):
                 print("Creation du dossier...")
                 os.makedirs(folder_dir)
-            cert.solve_ReLU_convexe(True,self.nom)
-            cert.solve_Mix_d(True, self.nom)
+            # cert.solve_ReLU_convexe(True,self.nom)
+            # cert.solve_Mix_d(True, self.nom)
 
-            cert.solve_Lan_couches_SDP(coupes,self.nom)
-            cert.solve_Lan_SDP(coupes, self.nom)
-            cert.solve_Mix_couches_SDP(coupes, self.nom)
+            # cert.solve_Lan_couches_SDP(coupes,self.nom)
+            # cert.solve_Lan_SDP(coupes, self.nom)
+            # cert.solve_Mix_couches_SDP(coupes, self.nom)
             cert.solve_Mix_d_couches_SDP(coupes, self.nom)
-            cert.solve_Mix_d_SDP(coupes, self.nom)
-            cert.solve_Mix_SDP(coupes, self.nom)
-            cert.solveFprG_SDP(coupes, self.nom)
-            cert.solveFprG_SDP_Adv2(coupes, self.nom)
+            # cert.solve_Mix_d_SDP(coupes, self.nom)
+            # cert.solve_Mix_SDP(coupes, self.nom)
+            # cert.solveFprG_SDP(coupes, self.nom)
+            # cert.solveFprG_SDP_Adv2(coupes, self.nom)
             
 
     def create_folder_benchmark_(self,
@@ -252,7 +252,7 @@ if __name__ == "__main__":
 
     data_modele = "BLOB"
     architecture = None
-    epsilon = 3.8
+    epsilon = 3.6
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
     Certification_Problem_.test()

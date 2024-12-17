@@ -94,7 +94,7 @@ def solve_Mix_SDP_objbetas_couches(
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
             for k in range(cert.K-1):
                 task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
-            task.appendbarvars([1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K]])
+            task.appendbarvars([1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
 
@@ -217,8 +217,8 @@ def solve_Mix_SDP_objbetas_couches(
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
                     affiche_matrice(cert,z_i,"Mix_d_couches_SDP",titre,nom_variable=f"z_{i}")
                 z_sol_derniere_couche = task.getbarxj(mosek.soltype.itr, cert.K-1)
-                print("taille calculee :: ", 1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K])
-                zbeta = reconstitue_matrice(1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K], z_sol_derniere_couche)
+                print("taille calculee :: ", 1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1)
+                zbeta = reconstitue_matrice(1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1, z_sol_derniere_couche)
                 affiche_matrice(cert,zbeta,"Mix_d_couches_SDP",titre,nom_variable="zbeta_dernieres_couches")
 
                 # Obtenir la valeur du problème primal
