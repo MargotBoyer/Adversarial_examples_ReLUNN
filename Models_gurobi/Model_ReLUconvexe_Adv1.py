@@ -25,19 +25,10 @@ from GUROBI_contraintes import(
 
 
 def solve_ReLUconvexe_Adv1(
-        K : int, 
-        n : List[int], 
-        x0 : List[float], 
-        ytrue : int, 
-        U : List[List[float]], 
-        L : List[List[float]], 
-        W : List[List[List[float]]], 
-        b : List[List[float]], 
-        epsilon_adv : float, 
-        epsilon : float, 
-        relax : bool, 
-        parametres_gurobi : Dict, 
-        verbose : bool = False
+        cert, 
+        relax : bool,
+        titre : str, 
+        verbose : bool = True
         ):
     # Create a new model
     env = gp.Env(empty=True)
@@ -48,27 +39,26 @@ def solve_ReLUconvexe_Adv1(
     adapt_parametres_gurobi(m, parametres_gurobi)
     
 
-    z = add_variable_z(m,K,n,L)
-    beta = add_variable_beta(m, K, n, relax)
-    s = add_variable_s(m,K,n)
-    sigma = add_variable_sigma(m,K,n,relax)
+    z = add_variable_z(m,cert.K,cert.n,cert.L)
+    beta = add_variable_beta(m, cert.K, cert.n, relax)
+    s = add_variable_s(m,cert.K,cert.n)
 
     # -------------------- Fonction objectif --------------------#
 
-    add_objective_diff(m,z,W,b,K,n,ytrue)
+    add_objective_diff(m,z,cert.W_reverse,cert.b,cert.K,cert.n,cert.y0)
 
     # -------------------- Contraintes ---------------------------#
     # Contrainte sur la boule autour de la donnee initiale
-    add_initial_ball_constraints(m,z,x0,epsilon,n, L[0], U[0])
+    add_initial_ball_constraints(m,z,cert.x0,cert.epsilon,cert.n, cert.L[0], cert.U[0])
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layers_ReLU_convex_relaxation(m,z,K,n,W,b,U,L)
+    add_hidden_layers_ReLU_convex_relaxation(m,z,cert.K,cert.n,cert.W_reverse,cert.b,cert.U,cert.L)
 
     # Contrainte derniere couche sans ReLU
 
     # Contraintes definissant un exemple adverse
-    add_adversarial_constraints(m,z,beta,W,b,U,K,n,ytrue,epsilon_adv)
-    add_somme_beta_superieure_1(m,beta,K,n,ytrue)
+    add_adversarial_constraints(m,z,beta,cert.W_reverse,cert.b,cert.U,cert.K,cert.n,cert.y0,cert.rho)
+    add_somme_beta_superieure_1(m,beta,cert.K,cert.n,cert.y0)
     
 
     m.write("Models_gurobi/lp/ReLUconvexe_Adv1.lp")
@@ -89,25 +79,18 @@ def solve_ReLUconvexe_Adv1(
         if verbose:
             print("CPU time :", m.runtime)
 
-        for j in range(n[0]):
+        for j in range(cert.n[0]):
             Sol.append(z[0, j].X)
         status = 1
         if verbose:
             print("SOL : ", Sol)
 
         classes_finales = []
-        alphas = []
-        for k in range(1,K):
-            alpha_k = []
-            for j in range(n[k]):
-                alpha_k.append(sigma[k,j].X)
-            alphas.append(alpha_k)
 
-        for j in range(n[K]):
-            classes_finales.append(z[K, j].X)
+        for j in range(cert.n[cert.K]):
+            classes_finales.append(z[cert.K, j].X)
         if verbose:
             print("Classes finales: ", classes_finales)
-            print("Alphas : ", alphas)
     elif m.Status == 3:
         status = 3
         if verbose :
@@ -118,7 +101,7 @@ def solve_ReLUconvexe_Adv1(
         print("Temps limite atteint, récupération de la meilleure solution réalisable")
         if m.SolCount > 0:
             print("Solution réalisable disponible")
-            for j in range(n[0]):
+            for j in range(cert.n[0]):
                 Sol.append(z[0, j].X)
             return Sol, m.ObjBound, 2, time_execution, {"Number_Nodes" : nb_nodes}
         status = 2

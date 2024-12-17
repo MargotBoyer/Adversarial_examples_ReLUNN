@@ -150,11 +150,15 @@ def solve_Lan_couches(
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
             if solsta == solsta.optimal:
-                # Assuming the optimization succeeded read solution
-
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
-                z = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z,"Lan_couches_SDP",titre)
+                z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
+                affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,nom_variable=f"z_{0}")
+                # Assuming the optimization succeeded read solution
+                for i in range(1,cert.K):
+                    z_sol_i = task.getbarxj(mosek.soltype.itr, i)
+                    z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
+                    affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,nom_variable=f"z_{i}")
+
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

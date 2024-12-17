@@ -20,18 +20,11 @@ from GUROBI_contraintes import(
 
 
 def solve_Lan_quad(
-        K : int,
-        n : List[int],
-        x0 : List[float],
-        ytrue : int,
+        cert, 
         ycible : int,
-        U : List[List[float]],
-        L : List[List[float]],
-        W : List[List[List[float]]],
-        b : List[List[float]],
-        epsilon : float,
-        parametres_gurobi : Dict,
-        verbose : bool = False
+        relax : bool,
+        titre : str, 
+        verbose : bool = True
         ):
     env = gp.Env(empty=True)
     if verbose : 
@@ -44,18 +37,20 @@ def solve_Lan_quad(
     adapt_parametres_gurobi(m,parametres_gurobi)
 
    
-    z = add_variable_z(m, K, n, L)
+    z = add_variable_z(m, cert.K, cert.n, cert.L)
 
     #-------------------- Fonction objectif --------------------#
 
-    add_objective_diff_ycible(m, z, W, b, K, n, ytrue, ycible)
+    add_objective_diff_ycible(m, z, cert.W_reverse, cert.b, cert.K, 
+                              cert.n, cert.y0, ycible)
 
     #-------------------- Contraintes ---------------------------#
     # Contraintes de bornes quadratiques sur la boule initiale et sur les couches internes
-    add_quadratic_bounds_on_all_layers_constraints(m,z,x0,K,U,L,n,epsilon)
+    add_quadratic_bounds_on_all_layers_constraints(m,z,cert.x0,cert.K,cert.U,
+                                                   cert.L,cert.n,cert.epsilon)
 
     # Contraintes couches internes avec ReLU
-    add_hidden_layer_constraints_quad(m,z,W,b,K,n)
+    add_hidden_layer_constraints_quad(m,z,cert.W_reverse,cert.b,cert.K,cert.n)
 
     #m.printStats()
     m.write("Models_gurobi/lp/Lan_quad.lp")
@@ -75,19 +70,19 @@ def solve_Lan_quad(
             print("Valeur optimale : ",round(opt,4))
         if verbose : 
             print("CPU time :", time_execution)
-        for j in range(n[0]):
+        for j in range(cert.n[0]):
             Sol.append(z[0,j].X)
         status=1
-        for j in range(n[K]):
-            if j== ytrue  :
-                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(W[K-1][i][ytrue] * z[K-1,i].X for i in range(n[K-1])) + b[K-1][ytrue]}")
+        for j in range(cert.n[cert.K]):
+            if j== cert.y0  :
+                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W_reverse[cert.K-1][i][cert.y0] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
             else :
-                print(f"Sortie pour j={j}] : {gp.quicksum(W[K-1][i][j] * z[K-1,i].X for i in range(n[K-1])) + b[K-1][j]}")
+                print(f"Sortie pour j={j}] : {gp.quicksum(cert.W_reverse[cert.K-1][i][j] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
     
    
         classes_finales = []
-        for j in range(n[K]):
-            classes_finales.append(z[K,j].X)
+        for j in range(cert.n[cert.K]):
+            classes_finales.append(z[cert.K,j].X)
         if verbose : 
             print("Classes finales: ", classes_finales)
 
@@ -103,7 +98,7 @@ def solve_Lan_quad(
         print("Temps limite atteint, récupération de la meilleure solution réalisable")
         if m.SolCount > 0:
             print("Solution réalisable disponible")
-            for j in range(n[0]):
+            for j in range(cert.n[0]):
                 Sol.append(z[0, j].X)
             return Sol, m.ObjBound, 2, time_execution, {"Number_Nodes" : nb_nodes}
         status = 2

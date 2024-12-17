@@ -25,9 +25,9 @@ from GUROBI_contraintes import (
 
 def solveFprG_quad(
     cert, 
-       relax : bool,
-       titre : str, 
-       verbose : bool = True
+    relax : bool,
+    titre : str, 
+    verbose : bool = True
 ):
     # Create a new model
     env = gp.Env(empty=True)

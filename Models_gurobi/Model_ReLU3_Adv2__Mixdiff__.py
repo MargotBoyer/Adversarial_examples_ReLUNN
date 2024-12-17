@@ -24,20 +24,10 @@ from GUROBI_contraintes import(
 
 
 def solveMix_diff_obj_quad(
-        K : int,
-        n : List[int],
-        x0 : List[float],
-        ytrue : int,
-        ycible : int,
-        U : List[List[float]],
-        L : List[List[float]],
-        W : List[List[List[float]]],
-        b : List[List[float]],
-        epsilon : float,
-        epsilon_adv : float,
+        cert, 
         relax : bool,
-        parametres_gurobi : Dict,
-        verbose : bool = False
+        titre : str, 
+        verbose : bool = True
         ):
     # Create a new model
     env = gp.Env(empty=True)
@@ -47,37 +37,38 @@ def solveMix_diff_obj_quad(
         env.setParam("OutputFlag",0)
     # env.setParam("DualReductions",0)
     env.start()
-    m = gp.Model("Mix", env=env)
+    m = gp.Model("Mix_diff", env=env)
     adapt_parametres_gurobi(m,parametres_gurobi)
 
    
-    z = add_variable_z(m, K, n, L)
-    beta = add_variable_beta(m,K,n,relax)
+    z = add_variable_z(m, cert.K, cert.n, cert.L)
+    beta = add_variable_beta(m,cert.K,cert.n,relax)
 
     #-------------------- Fonction objectif --------------------#
 
-    add_objective_diff_with_beta(m, z, beta, K, n, W, b, ytrue)
+    add_objective_diff_with_beta(m, z, beta, cert.K, cert.n, cert.W_reverse, cert.b, cert.y0)
 
     #-------------------- Contraintes ---------------------------#
     # Contraintes sur la boule autour de la donnée initiale
-    add_initial_ball_constraints(m, z, x0, epsilon, n, L[0], U[0])
+    add_initial_ball_constraints(m, z, cert.x0, cert.epsilon, cert.n, cert.L[0], cert.U[0])
     # add_adversarial_constraints(m, z, beta, W, b, U, K, n, ytrue, epsilon_adv)
 
     # Contraintes sur les bornes pour les hidden layers :
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layer_constraints_quad(m,z,W,b,K,n)
+    add_hidden_layer_constraints_quad(m,z,cert.W_reverse,cert.b,cert.K,cert.n)
     
     # Contrainte derniere couche sans ReLU
 
     # Contraintes définissant un exemple adversarial
     # ******* somme(betaj) == 1 *********************
     
-    add_somme_beta_egale_1(m, beta, K, n, ytrue)
+    add_somme_beta_egale_1(m, beta, cert.K, cert.n, cert.y0)
 
     # ******** betaj zj >= betaj zytrue *************
     #add_adversarial_constraints_product(m, z, beta, W, b, K, n, ytrue, epsilon_adv)
-    add_adversarial_constraints_product(m,z,beta,W,b,K,n,ytrue,epsilon_adv)
+    add_adversarial_constraints_product(m,z,beta,cert.W_reverse,cert.b,cert.K,
+                                        cert.n,cert.y0,cert.rho)
 
     # ****** Contrainte optionnelle : betai * betaj == 0 ***********
     #add_adversarial_constraints_product_betas_discrets(m, beta, K, n, ytrue)
@@ -101,18 +92,18 @@ def solveMix_diff_obj_quad(
             print("Valeur optimale : ",round(opt,4))
         if verbose : 
             print("CPU time :", time_execution)
-        for j in range(n[0]):
+        for j in range(cert.n[0]):
             Sol.append(z[0,j].X)
         betas = []
-        for j in range(n[K]):
+        for j in range(cert.n[cert.K]):
             betas.append(beta[j].X)
         status=1
         print("Betas : ", betas)
-        for j in range(n[K]):
-            if j== ytrue  :
-                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(W[K-1][i][ytrue] * z[K-1,i].X for i in range(n[K-1])) + b[K-1][ytrue]}")
+        for j in range(cert.n[cert.K]):
+            if j== cert.y0  :
+                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W_reverse[cert.K-1][i][cert.y0] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
             else :
-                print(f"Sortie pour j={j}] : {gp.quicksum(W[K-1][i][j] * z[K-1,i].X for i in range(n[K-1])) + b[K-1][j]}")
+                print(f"Sortie pour j={j}] : {gp.quicksum(cert.W_reverse[cert.K-1][i][j] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
         
         # if False:
         #     for k in range(K+1):
@@ -127,8 +118,8 @@ def solveMix_diff_obj_quad(
         
    
         classes_finales = []
-        for j in range(n[K]):
-            classes_finales.append(z[K,j].X)
+        for j in range(cert.n[cert.K]):
+            classes_finales.append(z[cert.K,j].X)
         if verbose : 
             print("Classes finales: ", classes_finales)
 
@@ -144,7 +135,7 @@ def solveMix_diff_obj_quad(
         print("Temps limite atteint, récupération de la meilleure solution réalisable")
         if m.SolCount > 0:
             print("Solution réalisable disponible")
-            for j in range(n[0]):
+            for j in range(cert.n[0]):
                 Sol.append(z[0, j].X)
             return Sol, m.ObjBound, 2, time_execution, {"Number_Nodes" : nb_nodes}
         status = 2
