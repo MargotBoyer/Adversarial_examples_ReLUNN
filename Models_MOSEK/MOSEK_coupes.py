@@ -15,7 +15,9 @@ def contrainte_McCormick_zk2(task : mosek.Task,
                             U : List[float], 
                             epsilon : float,
                             num_contrainte : int,
-                            par_couches : bool = False):
+                            par_couches : bool = False,
+                            neurones_actifs_stables : List = [],
+                            neurones_inactifs_stables : List = []):
     """Genere une coupe de McCormick sur les zk^2 diagonaux"""
     # ***** Nombre de contraintes : sum(n[0:K]) *****************
     # Contrainte sur l'input
@@ -54,6 +56,9 @@ def contrainte_McCormick_zk2(task : mosek.Task,
     # Contrainte sur les hidden layers
     for k in range(1, K+1):
         for j in range(n[k]):
+            if (k, j) in neurones_inactifs_stables + neurones_actifs_stables:
+                continue
+
             #  Contrainte : zk^2  >= - U^2 + 2 U zk *********
             if par_couches:
                 task.putbarablocktriplet(
@@ -234,7 +239,9 @@ def contrainte_Mc_Cormick_betai_zkj(task : mosek.Task,
                                     ytrue :int, 
                                     U : List[float], 
                                     num_contrainte : int, 
-                                    par_couches = False):
+                                    par_couches = False,
+                                    neurones_actifs_stables : List = [],
+                                    neurones_inactifs_stables : List = []):
     # ***** Nombre de contraintes : 2 * (n[K]-1) * sum(n) *****************
     if par_couches : 
         for i in range(n[K]):
@@ -243,6 +250,17 @@ def contrainte_Mc_Cormick_betai_zkj(task : mosek.Task,
             ibeta = return_good_j_beta(i, ytrue)
             # Contrainte sur le produit betai * zkj pour k AVANT DERNIERE couche 
             for j in range(n[K-1]):
+                if (K-1,j) in neurones_inactifs_stables:
+                    task.putbarablocktriplet(
+                        [num_contrainte],
+                        [K-1],
+                        [n[K-1] + n[K] + ibeta],
+                        [1 + j],
+                        [1/2],
+                    )
+                    task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [0], [0])
+                    num_contrainte += 1
+                    continue
                 task.putbarablocktriplet(
                     [num_contrainte, num_contrainte],
                     [K-1, K-1],
@@ -292,6 +310,18 @@ def contrainte_Mc_Cormick_betai_zkj(task : mosek.Task,
             ibeta = return_good_j_beta(i, ytrue)
             for k in range(K+1):
                 for j in range(n[k]):
+                    if (k,j) in neurones_inactifs_stables:
+                        task.putbarablocktriplet(
+                            [num_contrainte],
+                            [0],
+                            [sum(n) + ibeta],
+                            [return_i_from_k_j__variable_z(k,j,n)],
+                            [1/2],
+                        )
+                        task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [0], [0])
+                        num_contrainte += 1
+                        continue
+                    
                     zj = return_i_from_k_j__variable_z(k,j,n)
                     # Contrainte : betai * zkj <= U betai ******************
                     

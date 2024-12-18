@@ -81,6 +81,7 @@ def affiche_matrice(cert, T, model, titre, coupes, nom_variable = ""):
         T (list[list] or np.ndarray): 2D array (matrix) to be plotted.
     """
     coupes_str = " ".join(key for key, value in coupes.items() if value)
+    print("Coupes avant replace : ", coupes_str)
     coupes_str = coupes_str.replace('^','')
     print("Coupes str : ", coupes_str)
     T = np.array(T)

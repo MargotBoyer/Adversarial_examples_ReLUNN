@@ -307,10 +307,32 @@ def contrainte_ReLU_Glover(
         b : List[List[float]], 
         U : List[List[float]], 
         L : List[List[float]], 
-        num_contrainte : int):
+        num_contrainte : int,
+        par_couches : bool = False,
+        neurones_actifs_stables  : List = [],
+        neurones_inactifs_stables : List = []):
     # ***** Contrainte : l (1-sigma) <= Wz+b <= u sigma *****
     for k in range(1, K):
         for j in range(n[k]):
+            if (k, j) in neurones_actifs_stables:
+                if par_couches :
+                    A2_k = [1+n[k-1]+j] + [(1+i) for i in range(n[k - 1])]
+                    A2_l = [0] * (len(A2_k))
+                    A2_v = [1/2] + [-(W[k-1][j][i])/2 for i in range(n[k - 1])]
+                    task.putbarablocktriplet( [num_contrainte] * len(A2_k), [k-1] * len(A2_k),
+                    A2_k, A2_l, A2_v)
+                else : 
+                    idx_k_prec = return_i_from_k_j__variable_z(k - 1, 0, n)
+                    idx_k_j = return_i_from_k_j__variable_z(k, j, n)
+                    A2_k = [idx_k_j] + [(idx_k_prec+i) for i in range(n[k - 1])]
+                    A2_l = [0] * (len(A2_k))
+                    A2_v = [1/2] + [-(W[k-1][j][i])/2 for i in range(n[k - 1])]
+                    task.putbarablocktriplet( [num_contrainte] * len(A2_k), [0] * len(A2_k),
+                        A2_k, A2_l, A2_v)
+                task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [b[k - 1][j]], [b[k - 1][j]])
+                num_contrainte += 1
+                continue
+
             idx = return_i_from_k_j__variable_z(k - 1, 0, n)
             # Partie z
             A1_z_k = [(idx + i) for i in range(n[k - 1])]
@@ -365,6 +387,8 @@ def contrainte_ReLU_Glover(
     # ***** Contrainte : sigmaK x (WK zK + bK) = zK+1 *****
     for k in range(1, K):
         for j in range(n[k]):
+            if (k, j) in neurones_actifs_stables + neurones_inactifs_stables:
+                continue
             idx = return_i_from_k_j__variable_z(k - 1, 0, n)
             idx_sigma = return_i_from_k_j__variable_sigma(k, j, n)
             # Partie sigma * z

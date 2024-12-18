@@ -168,7 +168,7 @@ class Certification_Problem(abc.ABC):
         
         coupes_liste = [
                   {"RLT_Lan" : False, 
-                  "zk^2" : False,
+                  "zk^2" : True,
                   "betai*betaj" : False,
                   "sigmak*zk" : False,
                   "betai*zkj" : False}
@@ -181,7 +181,7 @@ class Certification_Problem(abc.ABC):
             x0 = x0.view(-1)
             print(f"Shape x0 : {x0.shape}")
             print(f"Application pour x0 : {x0} et y0 : {y0}")
-            time.sleep(5)
+            time.sleep(2)
             cert = Certification_Problem_Data(self.data_modele, self.architecture, 
                                               x0, y0.item(), ind_x0, self.epsilon)
             cert.calcule_bornes_all_algorithms()
@@ -198,15 +198,15 @@ class Certification_Problem(abc.ABC):
 
             for coupes in coupes_liste:
                 print("Coupes : ", coupes)
-                cert.solve_Lan_couches_SDP(coupes,self.nom)
-                cert.solve_Lan_SDP(coupes,self.nom)
-                cert.solve_Mix_couches_SDP(coupes, self.nom)
-                cert.solve_Mix_d_couches_SDP(coupes,self.nom)
-                print("Solve Mix_d")
-                cert.solve_Mix_d_SDP(coupes, self.nom)
-                cert.solve_Mix_SDP(coupes, self.nom)
-                cert.solveFprG_SDP(coupes, self.nom)
-                cert.solveFprG_SDP_Adv2(coupes, self.nom)
+                # cert.solve_Lan_couches_SDP(coupes,self.nom)
+                # cert.solve_Lan_SDP(coupes,self.nom)
+                # cert.solve_Mix_couches_SDP(coupes, self.nom)
+                # cert.solve_Mix_d_couches_SDP(coupes,self.nom)
+                # print("Solve Mix_d")
+                # cert.solve_Mix_d_SDP(coupes, self.nom)
+                # cert.solve_Mix_SDP(coupes, self.nom)
+                # cert.solveFprG_SDP(coupes, self.nom)
+                # cert.solveFprG_SDP_Adv2(coupes, self.nom)
             
 
     def create_folder_benchmark_(self,
@@ -280,7 +280,7 @@ if __name__ == "__main__":
 
     data_modele = "BLOB"
     architecture = None
-    epsilon = 10.1
+    epsilon = 10
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
     Certification_Problem_.test()
