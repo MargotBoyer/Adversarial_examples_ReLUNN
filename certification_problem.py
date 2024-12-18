@@ -175,10 +175,10 @@ class Certification_Problem(abc.ABC):
             # cert.solve_Lan_SDP(coupes, self.nom)
             # cert.solve_Mix_couches_SDP(coupes, self.nom)
             cert.solve_Mix_d_couches_SDP(coupes, self.nom)
-            # cert.solve_Mix_d_SDP(coupes, self.nom)
+            cert.solve_Mix_d_SDP(coupes, self.nom)
             # cert.solve_Mix_SDP(coupes, self.nom)
             # cert.solveFprG_SDP(coupes, self.nom)
-            # cert.solveFprG_SDP_Adv2(coupes, self.nom)
+            cert.solveFprG_SDP_Adv2(coupes, self.nom)
             
 
     def create_folder_benchmark_(self,

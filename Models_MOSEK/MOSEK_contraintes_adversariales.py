@@ -539,3 +539,44 @@ def contrainte_produit_betas_nuls_Adv2_Adv3(
                 task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [0], [0])
                 num_contrainte += 1
     return num_contrainte
+
+
+def contrainte_borne_somme_betaz(
+        task : mosek.Task,
+        K : int,
+        n : List[int],
+        ytrue : int,
+        U : List[List[float]],
+        num_contrainte : int, 
+        sigmas : bool = False,
+        par_couches : bool = False
+):
+    if par_couches : 
+        task.putbarablocktriplet(
+                [num_contrainte] * (n[K] - 1),  
+                [K-1] * (n[K] - 1),  
+                [(n[K-1] + n[K] + return_good_j_beta(j, ytrue)) for j in range(n[K]) if j!= ytrue], 
+                [(1 + n[K-1] + j) for j in range(n[K]) if j!= ytrue],
+                [1/2] * (n[K] - 1),
+            )
+    elif not par_couches and sigmas :
+        task.putbarablocktriplet(
+                [num_contrainte] * (n[K] - 1),  
+                [0] * (n[K] - 1),  
+                [(sum(n) + sum(n[1:K])+ return_good_j_beta(j, ytrue)) for j in range(n[K]) if j!=ytrue], 
+                [return_i_from_k_j__variable_z(K,j,n) for j in range(n[K]) if j!=ytrue],
+                [1/2] * (n[K] - 1),
+            ) 
+    elif not par_couches and not sigmas :    
+        task.putbarablocktriplet(
+                [num_contrainte] * (n[K] - 1),  
+                [0] * (n[K] - 1),  
+                [(sum(n) + return_good_j_beta(j, ytrue)) for j in range(n[K]) if j!=ytrue], 
+                [return_i_from_k_j__variable_z(K,j,n) for j in range(n[K]) if j!=ytrue],
+                [1/2] * (n[K] - 1),
+            )
+    # Bornes
+    task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-inf], [max(U[K])])
+    num_contrainte += 1
+    return num_contrainte
+

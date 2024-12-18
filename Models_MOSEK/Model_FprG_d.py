@@ -15,7 +15,8 @@ from MOSEK_contraintes_adversariales import (
     contrainte_exemple_adverse_somme_beta_egale_1,
     contrainte_beta_discret,
     contrainte_borne_betas,
-    contrainte_borne_betas_unis
+    contrainte_borne_betas_unis,
+    contrainte_borne_somme_betaz
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_borne_couches_internes,
@@ -62,7 +63,7 @@ def solveFprG_SDP_Adv2(
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
             numcon = (
-                sum(cert.n[1:cert.K]) * 6 + 5 * cert.n[cert.K] + cert.n[0] - 2
+                sum(cert.n[1:cert.K]) * 6 + 5 * cert.n[cert.K] + cert.n[0] - 1
             )
             # Ajout enveloppe de McCormick
             if coupes["zk^2"] :
@@ -163,6 +164,9 @@ def solveFprG_SDP_Adv2(
             num_contrainte = contrainte_sigma_discret(task, cert.K, cert.n, num_contrainte)
             if verbose : 
                 print("Nombre de contraintes actuelles apres 11 : ", num_contrainte)
+
+            # Contrainte : somme(betaj zKj) <= max(U[K]) **************************
+            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte, sigmas = True, par_couches=False)
 
             # Contrainte X00 = 1
             num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,1,num_contrainte)

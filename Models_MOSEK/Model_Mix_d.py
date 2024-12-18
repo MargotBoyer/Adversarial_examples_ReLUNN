@@ -20,7 +20,8 @@ from MOSEK_contraintes_adversariales import(
     contrainte_beta_discret,
     contrainte_borne_betas,
     contrainte_borne_betas_unis,
-    contrainte_produit_betas_nuls_Adv2_Adv3
+    contrainte_produit_betas_nuls_Adv2_Adv3,
+    contrainte_borne_somme_betaz
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_borne_couches_internes,
@@ -69,7 +70,7 @@ def solveMix_SDP_objbetas(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 3 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + (cert.n[cert.K]-1) * 3 + cert.n[0]
+            numcon = sum(cert.n[1:cert.K]) * 2 + 3 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + (cert.n[cert.K]-1) * 3 + cert.n[0] + 1
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
@@ -155,6 +156,9 @@ def solveMix_SDP_objbetas(
             if verbose : 
                 print("Nombre de contraintes après contrainte 9", num_contrainte)
 
+            # Contrainte : somme(betaj zKj) <= max(U[K]) **************************
+            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,par_couches=False)
+           
             # Contrainte 10 : X00 = 1 (Le premier terme de la matrice variable est 1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,1,num_contrainte)
             if verbose : 

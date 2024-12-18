@@ -80,7 +80,7 @@ def objective_function_diff_betas(
         if sigmas : 
             task.putbarcblocktriplet(
                 [0] * n[K],  
-                [1 + sum(n) + sum(n[1:K]) + ytrue] + [(sum(n) + sum(n[1:K]) + return_good_j_beta(i, ytrue)) for i in range(n[K]) if i != ytrue],
+                [idx_last_layer + ytrue] + [(sum(n) + sum(n[1:K]) + return_good_j_beta(i, ytrue)) for i in range(n[K]) if i != ytrue],
                 [0]+ [(idx_last_layer + i) for i in range(n[K]) if i != ytrue], 
                 [1 / 2] + [-1 / 2] * (n[K] - 1),
                     )
