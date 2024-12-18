@@ -44,20 +44,20 @@ def solveFprG_quad(
     sigma = add_variable_sigma(m, cert.K, cert.n, relax)
 
     # -------------------- Fonction objectif --------------------#
-    add_objective_diff(m, z, cert.W_reverse, cert.b, cert.K, cert.n, cert.y0)
+    add_objective_diff(m, z, cert.W, cert.b, cert.K, cert.n, cert.y0)
     # -------------------- Contraintes ---------------------------#
 
     # Contraintes sur la boule autour de la donnée initiale
     add_initial_ball_constraints(m, z, cert.x0, cert.epsilon, cert.n, cert.L[0], cert.U[0])
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layer_constraints_with_sigma_quad(m, z, sigma, cert.W_reverse, cert.b, cert.K, 
+    add_hidden_layer_constraints_with_sigma_quad(m, z, sigma, cert.W, cert.b, cert.K, 
                                                  cert.n, cert.U, cert.L)
 
     # Contrainte derniere couche sans ReLU
 
     # Contraintes definissant un exemple adverse
-    add_adversarial_constraints(m, z, beta, cert.W_reverse, cert.b, cert.U, cert.K, 
+    add_adversarial_constraints(m, z, beta, cert.W, cert.b, cert.U, cert.K, 
                                 cert.n, cert.y0, cert.rho)
     add_somme_beta_superieure_1(m,beta,cert.K,cert.n,cert.y0)
 

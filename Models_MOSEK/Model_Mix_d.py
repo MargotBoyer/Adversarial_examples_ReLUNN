@@ -70,7 +70,7 @@ def solveMix_SDP_objbetas(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 3 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + (cert.n[cert.K]-1) * 3 + cert.n[0] + 1
+            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + (cert.n[cert.K]-1) * 3 + cert.n[0] - 1 + 2 * cert.n[cert.K]
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
@@ -116,7 +116,7 @@ def solveMix_SDP_objbetas(
                 print("Nombre de contraintes après contrainte 3", num_contrainte)
 
             # ***** Contrainte 4 : somme(betaj) = 1 ***********************
-            num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, 
+            num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,cert.K,cert.n,cert.y0,num_contrainte, 
                                                                            par_couches=False, betas_z_unis=True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 4", num_contrainte)
@@ -133,7 +133,7 @@ def solveMix_SDP_objbetas(
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
-            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
+            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,num_contrainte,
                                                     par_couches = False, betas_z_unis= True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7", num_contrainte)
@@ -202,11 +202,12 @@ def solveMix_SDP_objbetas(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
-
+            print(f"status: {solsta}")
             if solsta == solsta.optimal:
+                print("On a trouve une solution optimale ! ")
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z = reconstitue_matrice(sum(cert.n) + cert.n[cert.K], z_sol)
-                affiche_matrice(cert,z,"Mix_d_SDP",titre,nom_variable="zbeta")
+                affiche_matrice(cert,z,"Mix_d_SDP",titre,coupes,nom_variable="zbeta")
 
                 print(
                     "z : ",

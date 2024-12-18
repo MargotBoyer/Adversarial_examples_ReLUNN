@@ -297,12 +297,12 @@ class Certification_Problem_Data:
                 print(f"\n     Couche {couche}  neurone {neurone}  : ")
                 print("Neurones actifs stables a ce jour : ", neurones_actifs_stables)
                 print("Neurones inactifs stables a ce jour : ", neurones_inactifs_stables)
-                L_neurone, status, time_execution, dic_nb_nodes = solve_borne_inf_L(couche, neurone, self.K, self.n, self.x0,  self.W_reverse, self.b, self.L, self.U, self.epsilon, 
+                L_neurone, status, time_execution, dic_nb_nodes = solve_borne_inf_L(couche, neurone, self.K, self.n, self.x0,  self.W, self.b, self.L, self.U, self.epsilon, 
                                                                                     relax, neurones_actifs_stables, neurones_inactifs_stables, parametres_gurobi, verbose = verbose)            
                 L_couche.append(L_neurone)
                 print(f"L = {L_neurone}")
 
-                U_neurone, status, time_execution, dic_nb_nodes = solve_borne_sup_U(couche, neurone, self.K, self.n, self.x0,  self.W_reverse, self.b, self.L, self.U, self.epsilon, 
+                U_neurone, status, time_execution, dic_nb_nodes = solve_borne_sup_U(couche, neurone, self.K, self.n, self.x0,  self.W, self.b, self.L, self.U, self.epsilon, 
                                                                                     relax, neurones_actifs_stables, neurones_inactifs_stables, parametres_gurobi,verbose = verbose)
                 print(f"U = {U_neurone}")
                 U_couche.append(U_neurone)
@@ -394,30 +394,30 @@ class Certification_Problem_Data:
         # self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
         
     def solveFprG_SDP_Adv2(self, coupes, titre):
-        return MOSEK_FprG_d.solveFprG_SDP_Adv2(self,coupes, titre,verbose = True)
+        return MOSEK_FprG_d.solveFprG_SDP_Adv2(self,coupes, titre,verbose = False)
     
     def solveFprG_SDP(self, coupes, titre):
-        return MOSEK_FprG.solveFprG_SDP(self,coupes, titre,verbose = True)
+        return MOSEK_FprG.solveFprG_SDP(self,coupes, titre,verbose = False)
     
     def solve_Lan_couches_SDP(self, coupes, titre):
         ycible = cherche_ycible(self.y0, self.n[self.K])
-        return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre)
+        return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre, verbose = False)
     
     def solve_Lan_SDP(self, coupes, titre):
         ycible = cherche_ycible(self.y0, self.n[self.K])
-        return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre)
+        return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, verbose = False)
     
     def solve_Mix_couches_SDP(self, coupes, titre):
-        return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre)
+        return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre, verbose = False)
     
     def solve_Mix_d_couches_SDP(self,coupes,titre):
-        return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre)
+        return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre, verbose = False)
     
     def solve_Mix_d_SDP(self,coupes,titre):
-        return MOSEK_Mix_d.solveMix_SDP_objbetas(self,coupes,titre)
+        return MOSEK_Mix_d.solveMix_SDP_objbetas(self,coupes,titre, verbose = False)
     
     def solve_Mix_SDP(self,coupes,titre):
-        return MOSEK_Mix.solveMix_SDP(self,coupes,titre)
+        return MOSEK_Mix.solveMix_SDP(self,coupes,titre, verbose = False)
     
     def solve_Fischetti_diff(self,relax,titre):
         return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre)

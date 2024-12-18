@@ -45,19 +45,19 @@ def solve_ReLUconvexe_Adv1(
 
     # -------------------- Fonction objectif --------------------#
 
-    add_objective_diff(m,z,cert.W_reverse,cert.b,cert.K,cert.n,cert.y0)
+    add_objective_diff(m,z,cert.W,cert.b,cert.K,cert.n,cert.y0)
 
     # -------------------- Contraintes ---------------------------#
     # Contrainte sur la boule autour de la donnee initiale
     add_initial_ball_constraints(m,z,cert.x0,cert.epsilon,cert.n, cert.L[0], cert.U[0])
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layers_ReLU_convex_relaxation(m,z,cert.K,cert.n,cert.W_reverse,cert.b,cert.U,cert.L)
+    add_hidden_layers_ReLU_convex_relaxation(m,z,cert.K,cert.n,cert.W,cert.b,cert.U,cert.L)
 
     # Contrainte derniere couche sans ReLU
 
     # Contraintes definissant un exemple adverse
-    add_adversarial_constraints(m,z,beta,cert.W_reverse,cert.b,cert.U,cert.K,cert.n,cert.y0,cert.rho)
+    add_adversarial_constraints(m,z,beta,cert.W,cert.b,cert.U,cert.K,cert.n,cert.y0,cert.rho)
     add_somme_beta_superieure_1(m,beta,cert.K,cert.n,cert.y0)
     
 

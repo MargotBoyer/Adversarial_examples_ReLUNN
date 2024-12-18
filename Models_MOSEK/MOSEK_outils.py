@@ -73,19 +73,21 @@ def adapte_parametres_mosek(task : mosek.Task):
     task.putintparam(mosek.iparam.num_threads, 2)
 
 
-def affiche_matrice(cert, T, model, titre, nom_variable = ""):
+def affiche_matrice(cert, T, model, titre, coupes, nom_variable = ""):
     """
     Plot a 2D matrix with values rounded to two decimal places and columns aligned.
 
     Parameters:
         T (list[list] or np.ndarray): 2D array (matrix) to be plotted.
     """
-    
+    coupes_str = " ".join(key for key, value in coupes.items() if value)
+    coupes_str = coupes_str.replace('^','')
+    print("Coupes str : ", coupes_str)
     T = np.array(T)
     n_rows, n_cols = T.shape
     fig, ax = plt.subplots()
     ax.axis('off')
-    ax.set_title(model, fontsize=14, pad=20)
+    ax.set_title(model+ " _ " + coupes_str, fontsize=14, pad=20)
 
     # Create the table
     table_data = [[f"{T[i, j]:.2f}" for j in range(n_cols)] for i in range(n_rows)]
@@ -96,7 +98,7 @@ def affiche_matrice(cert, T, model, titre, nom_variable = ""):
     table.set_fontsize(10)
     table.auto_set_column_width(col=list(range(n_cols)))
     
-    plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}", bbox_inches='tight', dpi=300)
+    plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_{coupes_str}", bbox_inches='tight', dpi=300)
     plt.close()
 
 

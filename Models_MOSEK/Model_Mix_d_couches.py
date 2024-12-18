@@ -74,7 +74,7 @@ def solve_Mix_SDP_objbetas_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 4 + 6 * cert.n[cert.K] + cert.n[0] + cert.K - 4 + cert.n[0] + 1
+            numcon = sum(cert.n[1:cert.K]) * 4 + 8 * cert.n[cert.K] + cert.n[0] + cert.K - 4 + cert.n[0] - 1 + 2 *  cert.n[cert.K]
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
@@ -120,7 +120,7 @@ def solve_Mix_SDP_objbetas_couches(
                 print("Nombre de contraintes après contrainte 3", num_contrainte)
 
             # ***** Contrainte 4 : somme(betaj) = 1 ***********************
-            num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, 
+            num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,cert.K,cert.n,cert.y0,num_contrainte, 
                                                                       par_couches=True, betas_z_unis=True)
             if verbose: 
                 print("Nombre de contraintes après contrainte 4", num_contrainte)
@@ -137,7 +137,7 @@ def solve_Mix_SDP_objbetas_couches(
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
-            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
+            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,num_contrainte, sigmas = False,
                                                     par_couches = True, betas_z_unis= True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7", num_contrainte)
@@ -160,8 +160,8 @@ def solve_Mix_SDP_objbetas_couches(
             if verbose : 
                 print("Nombre de contraintes après contrainte 9", num_contrainte)
 
-             # Contrainte : somme(betaj zKj) <= max(U[K]) **************************
-            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,par_couches=True)
+            # ***** Contrainte : somme(betaj zKj) <= max(U[K]) **************************
+            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,sigmas = False, par_couches=True)
            
             # ***** Contrainte 10 : Pk[zk+1] == Pk+1[zk+1] ****************************
             num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte)
@@ -215,15 +215,15 @@ def solve_Mix_SDP_objbetas_couches(
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z_0,"Mix_d_couches_SDP",titre,nom_variable="z_0")
+                affiche_matrice(cert,z_0,"Mix_d_couches_SDP",titre,coupes,nom_variable="z_0")
                 for i in range(1,cert.K-1):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
-                    affiche_matrice(cert,z_i,"Mix_d_couches_SDP",titre,nom_variable=f"z_{i}")
+                    affiche_matrice(cert,z_i,"Mix_d_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
                 z_sol_derniere_couche = task.getbarxj(mosek.soltype.itr, cert.K-1)
                 print("taille calculee :: ", 1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1)
                 zbeta = reconstitue_matrice(1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1, z_sol_derniere_couche)
-                affiche_matrice(cert,zbeta,"Mix_d_couches_SDP",titre,nom_variable="zbeta_dernieres_couches")
+                affiche_matrice(cert,zbeta,"Mix_d_couches_SDP",titre,coupes,nom_variable="zbeta_dernieres_couches")
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

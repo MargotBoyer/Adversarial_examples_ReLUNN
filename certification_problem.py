@@ -147,14 +147,35 @@ class Certification_Problem(abc.ABC):
     
     
     def test(self):
-        coupes = {"RLT_Lan" : False, 
+        coupes_liste = [{"RLT_Lan" : False, 
+                  "zk^2" : False,
+                  "betai*betaj" : False,
+                  "sigmak*zk" : False,
+                  "betai*zkj" : False},
+
+                  {"RLT_Lan" : False, 
+                  "zk^2" : True,
+                  "betai*betaj" : False,
+                  "sigmak*zk" : False,
+                  "betai*zkj" : False},
+
+                  {"RLT_Lan" : True, 
                   "zk^2" : False,
                   "betai*betaj" : False,
                   "sigmak*zk" : False,
                   "betai*zkj" : False}
+                  ]
+        
+        coupes_liste = [
+                  {"RLT_Lan" : False, 
+                  "zk^2" : False,
+                  "betai*betaj" : False,
+                  "sigmak*zk" : False,
+                  "betai*zkj" : False}
+                  ]
+        
         print("n ", self.n)
         
-        time.sleep(1)
         for ind_x0 in range(len(self.data)):
             x0, y0 = self.data[ind_x0]
             x0 = x0.view(-1)
@@ -163,22 +184,29 @@ class Certification_Problem(abc.ABC):
             time.sleep(5)
             cert = Certification_Problem_Data(self.data_modele, self.architecture, 
                                               x0, y0.item(), ind_x0, self.epsilon)
-            cert.IBP()
+            cert.calcule_bornes_all_algorithms()
             folder_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}"
             if not os.path.exists(folder_dir):
                 print("Creation du dossier...")
                 os.makedirs(folder_dir)
+
             # cert.solve_ReLU_convexe(True,self.nom)
             # cert.solve_Mix_d(True, self.nom)
+            # cert.solve_Fischetti_diff(True,self.nom)
+            # cert.solve_FprG(True, self.nom)
+            # cert.solve_Lan_quad(True, self.nom)
 
-            # cert.solve_Lan_couches_SDP(coupes,self.nom)
-            # cert.solve_Lan_SDP(coupes, self.nom)
-            # cert.solve_Mix_couches_SDP(coupes, self.nom)
-            cert.solve_Mix_d_couches_SDP(coupes, self.nom)
-            cert.solve_Mix_d_SDP(coupes, self.nom)
-            # cert.solve_Mix_SDP(coupes, self.nom)
-            # cert.solveFprG_SDP(coupes, self.nom)
-            cert.solveFprG_SDP_Adv2(coupes, self.nom)
+            for coupes in coupes_liste:
+                print("Coupes : ", coupes)
+                cert.solve_Lan_couches_SDP(coupes,self.nom)
+                cert.solve_Lan_SDP(coupes,self.nom)
+                cert.solve_Mix_couches_SDP(coupes, self.nom)
+                cert.solve_Mix_d_couches_SDP(coupes,self.nom)
+                print("Solve Mix_d")
+                cert.solve_Mix_d_SDP(coupes, self.nom)
+                cert.solve_Mix_SDP(coupes, self.nom)
+                cert.solveFprG_SDP(coupes, self.nom)
+                cert.solveFprG_SDP_Adv2(coupes, self.nom)
             
 
     def create_folder_benchmark_(self,
@@ -252,7 +280,7 @@ if __name__ == "__main__":
 
     data_modele = "BLOB"
     architecture = None
-    epsilon = 3.6
+    epsilon = 10.1
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
     Certification_Problem_.test()

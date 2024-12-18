@@ -63,7 +63,7 @@ def solveFprG_SDP_Adv2(
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
             numcon = (
-                sum(cert.n[1:cert.K]) * 6 + 5 * cert.n[cert.K] + cert.n[0] - 1
+                sum(cert.n[1:cert.K]) * 6 + 7 * cert.n[cert.K] + cert.n[0] - 3 + 2 * cert.n[cert.K]
             )
             # Ajout enveloppe de McCormick
             if coupes["zk^2"] :
@@ -121,7 +121,7 @@ def solveFprG_SDP_Adv2(
 
             # ***** Contrainte 5 : somme(betaj) = 1 *****************
             num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(
-                task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = False, betas_z_unis= True
+                task,cert.K,cert.n,cert.y0,num_contrainte, par_couches = False, betas_z_unis= True
             )
             
             if verbose : 
@@ -134,7 +134,7 @@ def solveFprG_SDP_Adv2(
                 print("Nombre de contraintes actuelles apres 6 : ", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
-            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
+            num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,num_contrainte,
                                                     sigmas = True, par_couches = False, betas_z_unis= True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7 : ", num_contrainte)
@@ -223,7 +223,7 @@ def solveFprG_SDP_Adv2(
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z = reconstitue_matrice(sum(cert.n) + sum(cert.n[1:cert.K]) + cert.n[cert.K], z_sol)
-                affiche_matrice(cert, z,"FprG_d", titre)
+                affiche_matrice(cert, z,"FprG_d", titre, coupes)
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

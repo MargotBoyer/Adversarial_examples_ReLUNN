@@ -46,7 +46,7 @@ def solveMix_diff_obj_quad(
 
     #-------------------- Fonction objectif --------------------#
 
-    add_objective_diff_with_beta(m, z, beta, cert.K, cert.n, cert.W_reverse, cert.b, cert.y0)
+    add_objective_diff_with_beta(m, z, beta, cert.K, cert.n, cert.W, cert.b, cert.y0)
 
     #-------------------- Contraintes ---------------------------#
     # Contraintes sur la boule autour de la donnée initiale
@@ -56,7 +56,7 @@ def solveMix_diff_obj_quad(
     # Contraintes sur les bornes pour les hidden layers :
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layer_constraints_quad(m,z,cert.W_reverse,cert.b,cert.K,cert.n)
+    add_hidden_layer_constraints_quad(m,z,cert.W,cert.b,cert.K,cert.n)
     
     # Contrainte derniere couche sans ReLU
 
@@ -67,7 +67,7 @@ def solveMix_diff_obj_quad(
 
     # ******** betaj zj >= betaj zytrue *************
     #add_adversarial_constraints_product(m, z, beta, W, b, K, n, ytrue, epsilon_adv)
-    add_adversarial_constraints_product(m,z,beta,cert.W_reverse,cert.b,cert.K,
+    add_adversarial_constraints_product(m,z,beta,cert.W,cert.b,cert.K,
                                         cert.n,cert.y0,cert.rho)
 
     # ****** Contrainte optionnelle : betai * betaj == 0 ***********
@@ -101,9 +101,9 @@ def solveMix_diff_obj_quad(
         print("Betas : ", betas)
         for j in range(cert.n[cert.K]):
             if j== cert.y0  :
-                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W_reverse[cert.K-1][i][cert.y0] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
+                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W[cert.K-1][cert.y0][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
             else :
-                print(f"Sortie pour j={j}] : {gp.quicksum(cert.W_reverse[cert.K-1][i][j] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
+                print(f"Sortie pour j={j}] : {gp.quicksum(cert.W[cert.K-1][j][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
         
         # if False:
         #     for k in range(K+1):

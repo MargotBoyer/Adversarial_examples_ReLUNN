@@ -11,8 +11,8 @@ def add_objective_diff(
         n : List[int], 
         ytrue : int):
     """ Objectif Adv1 """
-    m.setObjective( (gp.quicksum(W[K-1][i][ytrue] * z[K-1,i] for i in range(n[K-1])) + 
-                     b[K-1][ytrue] - gp.quicksum(gp.quicksum(W[K-1][i][j] * z[K-1,i] for i in range(n[K-1])) + 
+    m.setObjective( (gp.quicksum(W[K-1][ytrue][i] * z[K-1,i] for i in range(n[K-1])) + 
+                     b[K-1][ytrue] - gp.quicksum(gp.quicksum(W[K-1][j][i] * z[K-1,i] for i in range(n[K-1])) + 
                                                  b[K-1][j] for j in range(n[K]) if j!= ytrue) ), GRB.MINIMIZE)
     
 
@@ -26,8 +26,8 @@ def add_objective_diff_with_beta(
         b : List[List[float]], 
         ytrue : int):
     """ Objectif Adv2 ou Adv3 """
-    m.setObjective( (gp.quicksum(W[K-1][i][ytrue] * z[K-1,i] for i in range(n[K-1])) + b[K-1][ytrue]
-                      - gp.quicksum((gp.quicksum(W[K-1][i][j] * z[K-1,i] for i in range(n[K-1])) + 
+    m.setObjective( (gp.quicksum(W[K-1][ytrue][i] * z[K-1,i] for i in range(n[K-1])) + b[K-1][ytrue]
+                      - gp.quicksum((gp.quicksum(W[K-1][j][i] * z[K-1,i] for i in range(n[K-1])) + 
                                      b[K-1][j]) * beta[j] for j in range(n[K]) if j!=ytrue)), 
                                      GRB.MINIMIZE)
 
@@ -42,8 +42,8 @@ def add_objective_diff_ycible(
         ycible : int):
     """ Objectif Advycible """
     m.setObjective( 
-        gp.quicksum(W[K-1][i][ytrue] * z[K-1,i] for i in range(n[K-1])) + b[K-1][ytrue] 
-                     - ((gp.quicksum(W[K-1][i][ycible] * z[K-1,i] for i in range(n[K-1])) + b[K-1][ycible] ) ), GRB.MINIMIZE
+        gp.quicksum(W[K-1][ytrue][i] * z[K-1,i] for i in range(n[K-1])) + b[K-1][ytrue] 
+                     - ((gp.quicksum(W[K-1][ycible][i] * z[K-1,i] for i in range(n[K-1])) + b[K-1][ycible] ) ), GRB.MINIMIZE
                      )
     
 
@@ -77,7 +77,7 @@ def add_objective_U_linear(m : gp.Model,
                     neurone : int,
                     neurones_inactifs_stables : list = None):
     """ Objectif calculant la borne sup U de la valeur du neurone neurone de la couche couche"""
-    m.setObjective(gp.quicksum(W[couche-1][i][neurone] * z[couche-1,i] for i in range(n[couche-1]) if (couche,i) not in neurones_inactifs_stables) 
+    m.setObjective(gp.quicksum(W[couche-1][neurone][i] * z[couche-1,i] for i in range(n[couche-1]) if (couche,i) not in neurones_inactifs_stables) 
                    + b[couche-1][neurone], GRB.MAXIMIZE)
 
 def add_objective_L_linear(m : gp.Model, 
@@ -89,5 +89,5 @@ def add_objective_L_linear(m : gp.Model,
                     neurone : int,
                     neurones_inactifs_stables : list = []):
     """ Objectif calculant la borne sup L de la valeur du neurone neurone de la couche couche"""
-    m.setObjective(gp.quicksum(W[couche-1][i][neurone] * z[couche-1,i] for i in range(n[couche-1]) if (couche,i) not in neurones_inactifs_stables)
+    m.setObjective(gp.quicksum(W[couche-1][neurone][i] * z[couche-1,i] for i in range(n[couche-1]) if (couche,i) not in neurones_inactifs_stables)
                    + b[couche-1][neurone], GRB.MINIMIZE)

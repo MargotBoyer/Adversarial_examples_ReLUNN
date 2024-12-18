@@ -139,8 +139,6 @@ def contrainte_exemple_adverse_beta_produit_complet(
         K : int,
         n : List[int],
         ytrue : int,
-        U : List[List[float]],
-        rho : float,
         num_contrainte : int, 
         par_couches : bool = False):
     # ***** Contrainte : betaj zKj > betaj zKj2 pour tout j2  *****
@@ -191,8 +189,6 @@ def contrainte_exemple_adverse_somme_beta_egale_1(
         K : int,
         n : List[int],
         ytrue : int,
-        U : List[List[float]],
-        rho : float,
         num_contrainte : int, 
         par_couches : bool = False, 
         betas_z_unis : bool = False):
@@ -253,8 +249,6 @@ def contrainte_exemple_adverse_somme_beta_superieure_1(
         K : int,
         n : List[int],
         ytrue : int,
-        U : List[List[float]],
-        rho : float,
         num_contrainte : int, 
         par_couches : bool = False,
         betas_z_unis : bool = False):
@@ -369,9 +363,6 @@ def contrainte_borne_betas(
         K : int,
         n : List[int],
         ytrue : int,
-        U : List[List[float]],
-        L : List[List[float]],
-        rho : float,
         num_contrainte : int, 
         sigmas : bool = False,
         par_couches : bool = False, 
@@ -440,42 +431,83 @@ def contrainte_borne_betas_unis(
         sigmas : bool = False,
         par_couches : bool = False):
     # On a forcément : betas_z_unis = True
-    # *****  Contrainte : 0 <= zK_j betaj <= zK_j **************
-    # ***** Nombre de contraintes : 2 * (n[K] - 1) *****************
+    # *** Ce sont des contraintes de McCormick ******************
+    # ***** Nombre de contraintes : 4 * (n[K] - 1) *****************
+
+    # *****  Contrainte : betaj zK_j - zK_j - betaj U >= -U **************
     for j in range(n[K]):
         if j==ytrue:
             continue
         if par_couches : 
             task.putbarablocktriplet(
-                [num_contrainte] * 2,  
-                [K-1] * 2,  
-                [n[K-1] + n[K] + return_good_j_beta(j, ytrue), 1 + n[K-1] + j], 
-                [1 + n[K-1] + j, 0],
-                [1/2, -1/2],
+                [num_contrainte] * 3,  
+                [K-1] * 3,  
+                [n[K-1] + n[K] + return_good_j_beta(j, ytrue), 1 + n[K-1] + j, n[K-1] + n[K] + return_good_j_beta(j, ytrue)], 
+                [1 + n[K-1] + j, 0, 0],
+                [1/2, -1/2, -U[K][j]/2],
             )
         elif not par_couches and not sigmas : 
             task.putbarablocktriplet(
-                [num_contrainte] * 2,  
-                [0] * 2,  
-                [sum(n) + return_good_j_beta(j, ytrue), return_i_from_k_j__variable_z(K,j,n)], 
-                [return_i_from_k_j__variable_z(K,j,n), 0],
-                [1/2, -1/2],
+                [num_contrainte] * 3,  
+                [0] * 3,  
+                [sum(n) + return_good_j_beta(j, ytrue), return_i_from_k_j__variable_z(K,j,n), sum(n) + return_good_j_beta(j, ytrue)], 
+                [return_i_from_k_j__variable_z(K,j,n), 0, 0],
+                [1/2, -1/2, -U[K][j]/2],
             )
 
         elif not par_couches and sigmas : 
             task.putbarablocktriplet(
-                [num_contrainte] * 2,  
-                [0] * 2,  
-                [sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue), return_i_from_k_j__variable_z(K,j,n)], 
-                [return_i_from_k_j__variable_z(K,j,n), 0],
-                [1/2, -1/2],
+                [num_contrainte] * 3,  
+                [0] * 3,  
+                [sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue), 
+                 return_i_from_k_j__variable_z(K,j,n), 
+                 sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue)], 
+                [return_i_from_k_j__variable_z(K,j,n), 0, 0],
+                [1/2, -1/2, -U[K][j]/2],
             )
         # Bornes
-        task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-inf], [0])
+        task.putconboundlist([num_contrainte], [mosek.boundkey.lo], [-U[K][j]], [inf])
+        num_contrainte += 1
+
+    # *****  Contrainte : betaj zK_j <= zK_j - L + betaj L **************
+    for j in range(n[K]):
+        if j==ytrue:
+            continue
+        if par_couches : 
+            task.putbarablocktriplet(
+                [num_contrainte] * 3,  
+                [K-1] * 3,  
+                [n[K-1] + n[K] + return_good_j_beta(j, ytrue), 
+                 1 + n[K-1] + j, 
+                 n[K-1] + n[K] + return_good_j_beta(j, ytrue)], 
+                [1 + n[K-1] + j, 0, 0],
+                [1/2, -1/2, -L[K][j]/2],
+            )
+        elif not par_couches and not sigmas : 
+            task.putbarablocktriplet(
+                [num_contrainte] * 3,  
+                [0] * 3,  
+                [sum(n) + return_good_j_beta(j, ytrue), return_i_from_k_j__variable_z(K,j,n), sum(n) + return_good_j_beta(j, ytrue)], 
+                [return_i_from_k_j__variable_z(K,j,n), 0, 0],
+                [1/2, -1/2, -L[K][j]/2],
+            )
+
+        elif not par_couches and sigmas : 
+            task.putbarablocktriplet(
+                [num_contrainte] * 3,  
+                [0] * 3,  
+                [sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue), 
+                 return_i_from_k_j__variable_z(K,j,n), 
+                 sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue)], 
+                [return_i_from_k_j__variable_z(K,j,n), 0, 0],
+                [1/2, -L[K][j]/2, -1/2],
+            )
+        # Bornes
+        task.putconboundlist([num_contrainte], [mosek.boundkey.up], [-inf], [-L[K][j]])
         num_contrainte += 1
 
     
-    # *****  Contrainte : 0 <= zK_j betaj <= U betaj **************
+    # *****  Contrainte : zK_j betaj <= U betaj **************
     for j in range(n[K]):
         if j==ytrue:
             continue
@@ -504,7 +536,39 @@ def contrainte_borne_betas_unis(
                 [1/2, -U[K][j]/2],
             )
         # Bornes
-        task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-inf], [0])
+        task.putconboundlist([num_contrainte], [mosek.boundkey.up], [-inf], [0])
+        num_contrainte += 1
+
+    # *****  Contrainte : zK_j betaj >= L betaj **************
+    for j in range(n[K]):
+        if j==ytrue:
+            continue
+        if par_couches: 
+            task.putbarablocktriplet(
+                [num_contrainte] * 2,  
+                [K-1] * 2,  
+                [n[K-1] + n[K] + return_good_j_beta(j, ytrue), n[K-1] + n[K] + return_good_j_beta(j, ytrue)], 
+                [1 + n[K-1] + j, 0],
+                [1/2, -L[K][j]/2],
+            )
+        elif not par_couches and not sigmas :
+            task.putbarablocktriplet(
+                [num_contrainte] * 2,  
+                [0] * 2,  
+                [sum(n) + return_good_j_beta(j, ytrue), sum(n) + return_good_j_beta(j, ytrue)], 
+                [return_i_from_k_j__variable_z(K,j,n), 0],
+                [1/2, -L[K][j]/2],
+            )
+        elif not par_couches and sigmas :
+            task.putbarablocktriplet(
+                [num_contrainte] * 2,  
+                [0] * 2,  
+                [sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue), sum(n) + sum(n[1:K]) + return_good_j_beta(j, ytrue)], 
+                [return_i_from_k_j__variable_z(K,j,n), 0],
+                [1/2, -L[K][j]/2],
+            )
+        # Bornes
+        task.putconboundlist([num_contrainte], [mosek.boundkey.lo], [0], [inf])
         num_contrainte += 1
     return num_contrainte
 
@@ -519,6 +583,7 @@ def contrainte_produit_betas_nuls_Adv2_Adv3(
         sigmas : bool = False,
         par_couches : bool = False
 ):
+    # **** Contrainte : betai*betaj = 0
     # ***** Nombre de contraintes : (n[K] - 1) * (n[K] - 2) / 2 *****************
     if par_couches :
         return num_contrainte

@@ -66,7 +66,7 @@ def solve_Lan_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 3 + cert.n[cert.K] + sum(cert.n[:cert.K]) + cert.n[0] + cert.K - 1
+            numcon = sum(cert.n[1:cert.K]) * 3 + 3 * cert.n[cert.K] + sum(cert.n[:cert.K]) + cert.n[0] + cert.K + 2 * cert.n[cert.K] - 2
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
@@ -113,7 +113,8 @@ def solve_Lan_couches(
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # Contrainte 7 : X00 = 1 (Le premier terme de la matrice variable est 1)
-            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K-1,num_contrainte)
+            print("cert.K - 1 : ", cert.K-1)
+            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes après XOO = 1 : ", num_contrainte)
             # ***********************************************
@@ -149,15 +150,16 @@ def solve_Lan_couches(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
+            print("Solsta : ", solsta)
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,nom_variable=f"z_{0}")
+                affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{0}")
                 # Assuming the optimization succeeded read solution
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
-                    affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,nom_variable=f"z_{i}")
+                    affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
 
 
                 # Obtenir la valeur du problème primal

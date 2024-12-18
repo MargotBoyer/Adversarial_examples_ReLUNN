@@ -52,15 +52,15 @@ def contrainte_McCormick_zk2(task : mosek.Task,
         task.putconboundlist([num_contrainte], [mosek.boundkey.up], [-inf], [-ub * lb])
         num_contrainte += 1
     # Contrainte sur les hidden layers
-    for k in range(1, K):
+    for k in range(1, K+1):
         for j in range(n[k]):
             #  Contrainte : zk^2  >= - U^2 + 2 U zk *********
             if par_couches:
                 task.putbarablocktriplet(
                     [num_contrainte, num_contrainte],
-                    [k, k],
-                    [1 + j, 1 + j],
-                    [1  + j, 0],
+                    [k-1, k-1],
+                    [1 + n[k-1] + j, 1 + n[k-1] + j],
+                    [1  + n[k-1] + j, 0],
                     [1, - U[k][j]],
                 )
             else :
@@ -81,9 +81,9 @@ def contrainte_McCormick_zk2(task : mosek.Task,
             if par_couches : 
                 task.putbarablocktriplet(
                     [num_contrainte] * 2,
-                    [k] * 2,
-                    [1 + j, 1+ j],
-                    [1 + j, 0],
+                    [k-1] * 2,
+                    [1 + n[k-1] + j, 1 + n[k-1] + j],
+                    [1 + n[k-1] + j, 0],
                     [1, -U[k][j] / 2],
                 )
             else :

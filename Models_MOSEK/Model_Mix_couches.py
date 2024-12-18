@@ -63,7 +63,7 @@ def solveMix_SDP_par_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 3 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + cert.K +1 + sum(cert.n[1:cert.K]) + cert.n[0]
+            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + cert.K +1 + sum(cert.n[1:cert.K]) + cert.n[0] + 2 * cert.n[cert.K] - 2
 
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
@@ -108,7 +108,7 @@ def solveMix_SDP_par_couches(
             num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = True)
             # ***** Contrainte 6 : somme(betaj) > 1 *****************
             num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(
-                task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches= True, betas_z_unis= False
+                task,cert.K,cert.n,cert.y0,num_contrainte, par_couches= True, betas_z_unis= False
             )
             # ***** Contrainte 7 :   betaj == 0 ou betaj ==1  *****
             num_contrainte = contrainte_beta_discret(task,cert.K,cert.n,cert.y0,num_contrainte, 
@@ -170,14 +170,14 @@ def solveMix_SDP_par_couches(
                 beta_sol = task.getbarxj(mosek.soltype.itr, cert.K)
 
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z_0,"Mix_couches_SDP",titre,nom_variable="z_0")
+                affiche_matrice(cert,z_0,"Mix_couches_SDP",titre,coupes,nom_variable="z_0")
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
-                    affiche_matrice(cert,z_i,"Mix_couches_SDP",titre,nom_variable=f"z_{i}")
+                    affiche_matrice(cert,z_i,"Mix_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
 
                 beta = reconstitue_matrice(cert.n[cert.K], beta_sol)
-                affiche_matrice(cert,beta,"Mix_couches_SDP",titre,nom_variable="beta")
+                affiche_matrice(cert,beta,"Mix_couches_SDP",titre,coupes,nom_variable="beta")
 
                 if verbose : 
                     print("z : ", z_0)

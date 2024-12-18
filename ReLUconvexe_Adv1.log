@@ -198,3 +198,328 @@ Iteration    Objective       Primal Inf.    Dual Inf.      Time
 
 Solved in 4 iterations and 0.01 seconds (0.00 work units)
 Optimal objective -9.186611466e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 10:56:32 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0xcdd019f1
+Coefficient statistics:
+  Matrix range     [4e-01, 8e+01]
+  Objective range  [4e+00, 7e+00]
+  Bounds range     [1e-02, 1e+02]
+  RHS range        [4e-01, 8e+01]
+Presolve time: 0.05s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -6.5721068e+30   1.000000e+30   6.572107e+00      0s
+       4   -8.4611643e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.08 seconds (0.00 work units)
+Optimal objective -8.461164256e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 10:57:44 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x59ccb54f
+Coefficient statistics:
+  Matrix range     [5e-01, 1e+02]
+  Objective range  [4e+00, 5e+00]
+  Bounds range     [1e-02, 1e+02]
+  RHS range        [4e-01, 1e+02]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -4.8951508e+30   1.000000e+30   4.895151e+00      0s
+       4   -6.1273571e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -6.127357147e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:02:54 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x1fa2133f
+Coefficient statistics:
+  Matrix range     [5e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -1.0746470e+01   1.733060e+01   0.000000e+00      0s
+       4    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  3.594072583e+00
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:12:18 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0xc5efbac8
+Coefficient statistics:
+  Matrix range     [6e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -1.0035716e+01   1.679100e+01   0.000000e+00      0s
+       4    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  3.594072583e+00
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:15:57 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x943ab5ce
+Coefficient statistics:
+  Matrix range     [6e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -1.0474067e+01   1.713818e+01   0.000000e+00      0s
+       4    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  3.594072583e+00
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:19:08 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x4d76f864
+Coefficient statistics:
+  Matrix range     [6e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -1.0448808e+01   1.705859e+01   0.000000e+00      0s
+       4    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  3.594072583e+00
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:19:44 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0xc9e97d3c
+Coefficient statistics:
+  Matrix range     [4e-01, 8e+01]
+  Objective range  [4e+00, 7e+00]
+  Bounds range     [1e-02, 1e+02]
+  RHS range        [5e-01, 8e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -6.5721068e+30   1.000000e+30   6.572107e+00      0s
+       4   -8.5133763e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -8.513376283e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:20:43 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x138e6427
+Coefficient statistics:
+  Matrix range     [6e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    3.5940726e+00   4.000000e+00   0.000000e+00      0s
+       2    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 2 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  3.594072583e+00
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:21:30 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x05b039d7
+Coefficient statistics:
+  Matrix range     [6e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -9.5006800e+00   1.641268e+01   0.000000e+00      0s
+       4    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  3.594072583e+00
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:30:20 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x4c94be4d
+Coefficient statistics:
+  Matrix range     [4e-01, 7e+01]
+  Objective range  [4e+00, 7e+00]
+  Bounds range     [1e-02, 1e+02]
+  RHS range        [5e-01, 8e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -6.5721068e+30   1.000000e+30   6.572107e+00      0s
+       4   -7.7565752e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -7.756575156e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:33:09 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0xfb8ab82f
+Coefficient statistics:
+  Matrix range     [5e-01, 1e+02]
+  Objective range  [4e+00, 5e+00]
+  Bounds range     [1e-02, 9e+01]
+  RHS range        [5e-01, 1e+02]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -4.8951508e+30   1.000000e+30   4.895151e+00      0s
+       4   -5.5421384e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.00 seconds (0.00 work units)
+Optimal objective -5.542138420e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:35:27 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0x458c7292
+Coefficient statistics:
+  Matrix range     [4e-01, 7e+01]
+  Objective range  [4e+00, 7e+00]
+  Bounds range     [1e-02, 1e+02]
+  RHS range        [5e-01, 8e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -6.5721068e+30   1.000000e+30   6.572107e+00      0s
+       4   -7.7496488e+01   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.01 seconds (0.00 work units)
+Optimal objective -7.749648776e+01
+
+Gurobi 11.0.1 (win64) logging started Wed Dec 18 11:37:35 2024
+
+Set parameter LogFile to value "ReLUconvexe_Adv1.log"
+Gurobi Optimizer version 11.0.1 build v11.0.1rc0 (win64 - Windows 11.0 (22631.2))
+
+CPU model: AMD Ryzen 7 4800H with Radeon Graphics, instruction set [SSE2|AVX|AVX2]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 11 rows, 15 columns and 24 nonzeros
+Model fingerprint: 0xdb8fcdc6
+Coefficient statistics:
+  Matrix range     [6e-01, 2e+01]
+  Objective range  [1e+00, 2e+00]
+  Bounds range     [1e-02, 7e+01]
+  RHS range        [5e-01, 2e+01]
+Presolve time: 0.00s
+Presolved: 7 rows, 15 columns, 20 nonzeros
+
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0   -9.1803299e+00   1.615013e+01   0.000000e+00      0s
+       4    3.5940726e+00   0.000000e+00   0.000000e+00      0s
+
+Solved in 4 iterations and 0.01 seconds (0.00 work units)
+Optimal objective  3.594072583e+00

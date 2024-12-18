@@ -62,7 +62,7 @@ def add_hidden_layer_constraints_with_s(
     for k in range(1, K):
         for j in range(n[k]):
             m.addConstr(
-                gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 == z[k, j] - s[k, j]
             )
@@ -85,8 +85,8 @@ def add_hidden_layer_constraints_quad(
     """ Contrainte ReLU4 """
     for k in range(1, K):
         for j in range(n[k]):
-            m.addConstr(gp.quicksum(W[k-1][i][j] * z[k-1, i] for i in range(n[k-1])) + b[k-1][j] <= z[k, j])
-            m.addConstr((z[k, j] - gp.quicksum(W[k-1][i][j] * z[k-1, i] for i in range(n[k-1])) - b[k-1][j]) * z[k, j] == 0)
+            m.addConstr(gp.quicksum(W[k-1][j][i] * z[k-1, i] for i in range(n[k-1])) + b[k-1][j] <= z[k, j])
+            m.addConstr((z[k, j] - gp.quicksum(W[k-1][j][i] * z[k-1, i] for i in range(n[k-1])) - b[k-1][j]) * z[k, j] == 0)
 
 
 def add_hidden_layer_constraints_with_sigma_quad(
@@ -103,12 +103,12 @@ def add_hidden_layer_constraints_with_sigma_quad(
     for k in range(1, K):
         for j in range(n[k]):
             m.addConstr(
-                gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 <= U[k][j] * sigma[k, j]
             )
             m.addConstr(
-                gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 >= L[k][j] * (1 - sigma[k, j])
             )
@@ -117,7 +117,7 @@ def add_hidden_layer_constraints_with_sigma_quad(
                 z[k, j]
                 == sigma[k, j]
                 * (
-                    gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                    gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                     + b[k - 1][j]
                 )
             )
@@ -142,31 +142,31 @@ def add_hidden_layer_constraints_with_sigma_linear_Glover(
                  m.addConstr(z[k, j] == 0)
                  continue
             elif (k,j) in neurones_actifs_stables :
-                 m.addConstr(z[k, j] == gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) 
+                 m.addConstr(z[k, j] == gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) 
                              + b[k - 1][j])
                  continue
 
             m.addConstr(
-                gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 <= U[k][j] * sigma[k, j]
             )
             m.addConstr(
-                gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 >= L[k][j] * (1 - sigma[k, j])
             )
 
             m.addConstr(
                 z[k, j]
-                >= gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                >= gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 - U[k][j] * (1 - sigma[k, j])
             )
             m.addConstr(z[k, j] >= L[k][j] * sigma[k, j])
             m.addConstr(
                 z[k, j]
-                <= gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1]))
+                <= gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 - L[k][j] * (1 - sigma[k, j])
             )
@@ -224,17 +224,17 @@ def add_hidden_layers_ReLU_convex_relaxation(
                  m.addConstr(z[k, j] == 0)
                  continue
             elif (k,j) in neurones_actifs_stables :
-                 m.addConstr(z[k, j] == gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) 
+                 m.addConstr(z[k, j] == gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) 
                              + b[k - 1][j])
                  continue
             
-            m.addConstr(z[k,j] >= gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) + b[k - 1][j])
+            m.addConstr(z[k,j] >= gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) + b[k - 1][j])
             # Calcul des coordonnées de la droite y = ax + b reliant les points (U,U) et (L,0)
             a = U[k][j] / (U[k][j] - L[k][j])
             d = - L[k][j] * a
 
             m.addConstr(z[k,j] <= 
-                        a * (gp.quicksum(W[k - 1][i][j] * z[k - 1, i] for i in range(n[k - 1])) + b[k - 1][j]) + d)
+                        a * (gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) + b[k - 1][j]) + d)
 
 
 
@@ -254,10 +254,10 @@ def add_last_layer(
     # Cette contrainte pose problème : l'éviter et remplacer directement la valeur de zK+1 
     # dans les contraintes adversariales et l'objectif
     if neurone is not None : 
-        m.addConstr(z[K,neurone] - gp.quicksum(W[K-1][i][neurone] * z[K-1,i] for i in range(n[K-1])) == b[K-1][neurone] )
+        m.addConstr(z[K,neurone] - gp.quicksum(W[K-1][neurone][i] * z[K-1,i] for i in range(n[K-1])) == b[K-1][neurone] )
         return
     for j in range(n[K]):
-        m.addConstr(z[K,j] - gp.quicksum(W[K-1][i][j] * z[K-1,i] for i in range(n[K-1])) == b[K-1][j] )
+        m.addConstr(z[K,j] - gp.quicksum(W[K-1][j][i] * z[K-1,i] for i in range(n[K-1])) == b[K-1][j] )
 
 
 
@@ -281,9 +281,9 @@ def add_adversarial_constraints(
     for j in range(n[K]):
         if j != ytrue:
             m.addConstr(U[K][ytrue] * (1 - beta[j]) + 
-                        gp.quicksum(W[K-1][i][j] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j] >= 
+                        gp.quicksum(W[K-1][j][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j] >= 
                         (1 + epsilon_adv) * 
-                        (gp.quicksum(W[K-1][i][ytrue] * z[K-1, i] for i in range(n[K-1])) + b[K-1][ytrue]))
+                        (gp.quicksum(W[K-1][ytrue][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][ytrue]))
 
 
 
@@ -301,9 +301,9 @@ def add_adversarial_constraints_product(
     # Contrainte : betaj * zj >= betaj * ztrue
     for j in range(n[K]):
         if j != ytrue:
-            m.addConstr( ((gp.quicksum(W[K-1][i][j] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j]) * beta[j]) >=
+            m.addConstr( ((gp.quicksum(W[K-1][j][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j]) * beta[j]) >=
                         ((1 + epsilon_adv) * beta[j] *
-                        (gp.quicksum(W[K-1][i][ytrue] * z[K-1, i] for i in range(n[K-1])) + b[K-1][ytrue])) 
+                        (gp.quicksum(W[K-1][ytrue][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][ytrue])) 
             ) 
 
 def add_adversarial_constraints_product_complet_Adv3(
@@ -323,9 +323,9 @@ def add_adversarial_constraints_product_complet_Adv3(
             for j2 in range(n[K]) :
                 if j==j2:
                     continue
-                m.addConstr( ((gp.quicksum(W[K-1][i][j] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j]) 
+                m.addConstr( ((gp.quicksum(W[K-1][j][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j]) 
                                 * beta[j]) >= ((1 + epsilon_adv) * beta[j] *
-                            (gp.quicksum(W[K-1][i][j2] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j2])) 
+                            (gp.quicksum(W[K-1][j2][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j2])) 
                 ) 
 
 
@@ -354,9 +354,9 @@ def add_adversarial_constraints_ycible(
     """ Contrainte adversariale du modele de Fischetti """
     for j in range(n[K]):
         if j != ycible:
-            m.addConstr( (gp.quicksum(W[K-1][i][ycible] * z[K-1, i] for i in range(n[K-1])) + b[K-1][ycible]) >= 
+            m.addConstr( (gp.quicksum(W[K-1][ycible][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][ycible]) >= 
                         (1 + rho) * 
-            (gp.quicksum(W[K-1][i][j] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j]) )  
+            (gp.quicksum(W[K-1][j][i] * z[K-1, i] for i in range(n[K-1])) + b[K-1][j]) )  
 
 def add_somme_beta_egale_1(
         m : gp.Model, 

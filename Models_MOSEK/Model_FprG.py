@@ -66,7 +66,7 @@ def solveFprG_SDP(
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
             numcon = (
-                sum(cert.n[1:cert.K]) * 6 + 3 * cert.n[cert.K] + cert.n[0] + 1
+                sum(cert.n[1:cert.K]) * 6 + 5 * cert.n[cert.K] + cert.n[0] - 1 + 2 * cert.n[cert.K]
             )
             # Ajout enveloppe de McCormick
             if coupes["zk^2"] :
@@ -127,7 +127,7 @@ def solveFprG_SDP(
             )
             # ***** Contrainte 6 : somme(betaj) > 1 *****************
             num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(
-                task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = False, betas_z_unis= False
+                task,cert.K,cert.n,cert.y0,num_contrainte, par_couches = False, betas_z_unis= False
             )
             
             if verbose : 
@@ -222,9 +222,9 @@ def solveFprG_SDP(
                 beta_sol = task.getbarxj(mosek.soltype.itr, 1)
 
                 z = reconstitue_matrice(sum(cert.n) + sum(cert.n[1:cert.K]) + 1, z_sol)
-                affiche_matrice(cert,z,"FprG_SDP",titre,"z")
+                affiche_matrice(cert,z,"FprG_SDP",titre,coupes,"z")
                 beta = reconstitue_matrice(cert.n[cert.K], beta_sol)
-                affiche_matrice(cert,beta,"FprG_SDP",titre,"beta")
+                affiche_matrice(cert,beta,"FprG_SDP",titre,coupes,"beta")
 
                 if verbose:
                     print(

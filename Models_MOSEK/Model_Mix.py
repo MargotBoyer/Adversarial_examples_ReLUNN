@@ -63,7 +63,7 @@ def solveMix_SDP(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 3 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + 1 + cert.n[0]
+            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] - 1 + cert.n[0] + 2 * cert.n[cert.K]
             # Ajout contrainte sur les zk^2
             if coupes["zk^2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
@@ -107,7 +107,7 @@ def solveMix_SDP(
             # ***** Contrainte 5 :  u (1 - betaj) + zKj > zKj*  *****  
             num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte)
             # ***** Contrainte 6 : somme(betaj) > 1 *****************
-            num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte,
+            num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(task,cert.K,cert.n,cert.y0,num_contrainte,
                                                                                 par_couches= False, betas_z_unis= False)
 
             # ***** Contrainte 7 :   betaj == 0 ou betaj ==1  *****
@@ -171,8 +171,8 @@ def solveMix_SDP(
                 z = reconstitue_matrice(sum(cert.n) + 1, z_sol)
                 beta = reconstitue_matrice(cert.n[cert.K], beta_sol)
 
-                affiche_matrice(cert,z,"Mix_SDP",titre,nom_variable="z")
-                affiche_matrice(cert,beta,"Mix_SDP",titre,nom_variable="beta")
+                affiche_matrice(cert,z,"Mix_SDP",titre,coupes,nom_variable="z")
+                affiche_matrice(cert,beta,"Mix_SDP",titre,coupes,nom_variable="beta")
 
                 if verbose:
                     print(
