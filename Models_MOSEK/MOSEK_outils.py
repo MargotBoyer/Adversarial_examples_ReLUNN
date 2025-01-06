@@ -81,12 +81,15 @@ def affiche_matrice(cert, T, model, titre, coupes, nom_variable = ""):
     Parameters:
         T (list[list] or np.ndarray): 2D array (matrix) to be plotted.
     """
+
+    print("On est dans affiche matrice")
     coupes_str = "_".join(key for key, value in coupes.items() if value)
     #print("Coupes avant replace : ", coupes_str)
     coupes_str = coupes_str.replace('^','')
     #print("Coupes str : ", coupes_str)
 
-    model_dir = "datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
+    model_dir = f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
+    print("Model dir : ", model_dir)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 

@@ -430,47 +430,6 @@ class Certification_Problem_Data:
             print("Modèle non reconnu")
         
     
-    def solveFprG_SDP_Adv2(self, coupes, titre):
-        return MOSEK_FprG_d.solveFprG_SDP_Adv2(self,coupes, titre,verbose = False)
-    
-    def solveFprG_SDP(self, coupes, titre):
-        return MOSEK_FprG.solveFprG_SDP(self,coupes, titre,verbose = False)
-    
-    def solve_Lan_couches_SDP(self, coupes, titre):
-        ycible = cherche_ycible(self.y0, self.n[self.K])
-        return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre, verbose = False)
-    
-    def solve_Lan_SDP(self, coupes, titre):
-        ycible = cherche_ycible(self.y0, self.n[self.K])
-        return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, verbose = False)
-    
-    def solve_Mix_couches_SDP(self, coupes, titre):
-        return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre, verbose = False)
-    
-    def solve_Mix_d_couches_SDP(self,coupes,titre):
-        return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre, verbose = False)
-    
-    def solve_Mix_d_SDP(self,coupes,titre):
-        return MOSEK_Mix_d.solveMix_SDP_objbetas(self,coupes,titre, verbose = False)
-    
-    def solve_Mix_SDP(self,coupes,titre):
-        return MOSEK_Mix.solveMix_SDP(self,coupes,titre, verbose = False)
-    
-    def solve_Fischetti_diff(self,relax,titre):
-        return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre)
-
-    def solve_FprG(self,relax,titre):
-        return GUROBI_FprG.solveFprG_quad(self,relax,titre)
-    
-    def solve_Mix_d(self,relax,titre):
-        return GUROBI_Mix_diff.solveMix_diff_obj_quad(self,relax,titre)
-    
-    def solve_Lan_quad(self, relax, titre):
-        ycible = cherche_ycible(self.y0, self.n[self.K])
-        return GUROBI_Lan_quad.solve_Lan_quad(self,ycible,relax,titre)
-    
-    def solve_ReLU_convexe(self,relax,titre):
-        return GUROBI_ReLU_convexe.solve_ReLUconvexe_Adv1(self,relax,titre)
     
     def update_resultats(self, optimization_model: str, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos):
         label = -1

@@ -14,16 +14,30 @@ def contrainte_recurrence_matrices_couches(
     for k in range(1,K):
         for j in range(n[k]):
             task.putbarablocktriplet(
-                [num_contrainte, num_contrainte],  
-                [k-1, k], 
-                [1 + n[k-1] + j, 1+ j],  
-                [0, 0],
-                [1 / 2, -1/2],
-            )
+                    [num_contrainte, num_contrainte],  
+                    [k-1, k], 
+                    [1 + n[k-1] + j, 1+ j],  
+                    [0, 0],
+                    [1 / 2, -1/2],
+                      )
             # Bornes
             task.putconboundlist(
                 [num_contrainte], [mosek.boundkey.fx], [0], [0]
             )
             num_contrainte += 1
+            
+            for j2 in range( min(n[k],j+1) ):
+                task.putbarablocktriplet(
+                    [num_contrainte, num_contrainte],  
+                    [k-1, k], 
+                    [1 + n[k-1] + j, 1+ j],  
+                    [1 + n[k-1] + j2, 1 + j2],
+                    [1 / 2, -1/2],
+                )
+                # Bornes
+                task.putconboundlist(
+                    [num_contrainte], [mosek.boundkey.fx], [0], [0]
+                )
+                num_contrainte += 1
 
     return num_contrainte

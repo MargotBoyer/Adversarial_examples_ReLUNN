@@ -164,7 +164,7 @@ def contrainte_McCormick_zk2(task : mosek.Task,
                 [K-1, K-1],
                 [1 + n[K-1] + j,  1 + n[K-1] + j],
                 [1  + n[K-1] + j,  0],
-                [1, - (L[K][j] + U[K][j])],
+                [1, - (L[K][j] + U[K][j])/2],
             )
         else :
             task.putbarablocktriplet(
@@ -172,14 +172,15 @@ def contrainte_McCormick_zk2(task : mosek.Task,
                 [0, 0],
                 [return_i_from_k_j__variable_z(K,j,n), return_i_from_k_j__variable_z(K,j,n)],
                 [return_i_from_k_j__variable_z(K,j,n), 0],
-                [1, -(L[K][j]+U[K][j])],
+                [1, -(L[K][j]+U[K][j])/2],
             )
         # Bornes
         task.putconboundlist(
-            [num_contrainte], [mosek.boundkey.up], [-L[K][j] * U[K][j]], [inf]
+            [num_contrainte], [mosek.boundkey.up], [-inf], [-L[K][j] * U[K][j]]
         )
         num_contrainte += 1
     return num_contrainte
+
 
 
 def contrainte_Mc_Cormick_betai_betaj(task : mosek.Task, 

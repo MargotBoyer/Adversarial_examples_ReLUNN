@@ -74,7 +74,7 @@ def solve_Mix_SDP_objbetas_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 5 + 8 * cert.n[cert.K] + cert.n[0] + cert.K - 4 + cert.n[0] - 1 + 3 *  cert.n[cert.K]
+            numcon = sum(cert.n[1:cert.K]) * 5 + 8 * cert.n[cert.K] + cert.n[0] + cert.K - 4 + cert.n[0] - 1 + 2 *  cert.n[cert.K] + sum([ncouche**2 for ncouche in cert.n[:cert.K]])
             # Ajout contrainte sur les zk^2
             if coupes["zk2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])

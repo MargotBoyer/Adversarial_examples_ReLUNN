@@ -63,7 +63,8 @@ def solveMix_SDP_par_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + cert.K +1 + sum(cert.n[1:cert.K]) + cert.n[0] + 3 * cert.n[cert.K] - 2
+            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum([(ncouche+1)**2 for ncouche in cert.n[:cert.K]]) 
+            + cert.n[0] + cert.K +1 + sum(cert.n[1:cert.K]) + cert.n[0] + 3 * cert.n[cert.K] - 2
 
             # Ajout contrainte sur les zk^2
             if coupes["zk2"]:

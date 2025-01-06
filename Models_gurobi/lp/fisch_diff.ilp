@@ -3,6 +3,6 @@
 Minimize
  
 Subject To
- R13: C11 <= -0.2029801487857412
+ R13: C11 <= -0.0686381048145108
 Bounds
 End

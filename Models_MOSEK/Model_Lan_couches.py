@@ -66,7 +66,7 @@ def solve_Lan_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 3 + 3 * cert.n[cert.K] + sum(cert.n[:cert.K]) + cert.n[0] + cert.K + 3 * cert.n[cert.K] - 2
+            numcon = sum(cert.n[1:cert.K]) * 3 + 3 * cert.n[cert.K] + sum([ncouche**2 for ncouche in cert.n[:cert.K]]) + cert.n[0] + cert.K + 3 * cert.n[cert.K] - 2
             # Ajout contrainte sur les zk^2
             if coupes["zk2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
@@ -163,6 +163,7 @@ def solve_Lan_couches(
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
+                    print("Matrice z_i : ", z_i)
                     affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
 
 
