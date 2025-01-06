@@ -1,6 +1,7 @@
 import numpy as np
 import mosek
 import matplotlib.pyplot as plt
+import os
 
 
 def return_k_j_from_i(i,n):
@@ -80,10 +81,15 @@ def affiche_matrice(cert, T, model, titre, coupes, nom_variable = ""):
     Parameters:
         T (list[list] or np.ndarray): 2D array (matrix) to be plotted.
     """
-    coupes_str = " ".join(key for key, value in coupes.items() if value)
-    print("Coupes avant replace : ", coupes_str)
+    coupes_str = "_".join(key for key, value in coupes.items() if value)
+    #print("Coupes avant replace : ", coupes_str)
     coupes_str = coupes_str.replace('^','')
-    print("Coupes str : ", coupes_str)
+    #print("Coupes str : ", coupes_str)
+
+    model_dir = "datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
     T = np.array(T)
     n_rows, n_cols = T.shape
     fig, ax = plt.subplots()
@@ -99,7 +105,10 @@ def affiche_matrice(cert, T, model, titre, coupes, nom_variable = ""):
     table.set_fontsize(10)
     table.auto_set_column_width(col=list(range(n_cols)))
     
-    plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_{coupes_str}", bbox_inches='tight', dpi=300)
+    if coupes_str == "":
+        plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}", bbox_inches='tight', dpi=300)
+    else : 
+        plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
     plt.close()
 
 

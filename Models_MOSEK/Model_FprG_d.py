@@ -63,18 +63,18 @@ def solveFprG_SDP_Adv2(
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
             numcon = (
-                sum(cert.n[1:cert.K]) * 6 + 7 * cert.n[cert.K] + cert.n[0] - 3 + 2 * cert.n[cert.K]
+                sum(cert.n[1:cert.K]) * 6 + 7 * cert.n[cert.K] + cert.n[0] - 3 + 2 * cert.n[cert.K] + cert.n[cert.K]
             )
             # Ajout enveloppe de McCormick
-            if coupes["zk^2"] :
+            if coupes["zk2"] :
                 numcon+= (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout enveloppe sur les betas linearisation par Fortet
-            if cert.n[cert.K] > 2 and coupes["betai*betaj"]:
+            if cert.n[cert.K] > 2 and coupes["betaibetaj"]:
                 numcon += (3 * (int(cert.n[cert.K]) - 1) * (int(cert.n[cert.K]) - 2) // 2)
             # Ajout enveloppe de McCormick sur les zkj * sigmakj
-            if coupes["sigmak*zk"] :
+            if coupes["sigmakzk"] :
                 numcon +=  (3 * sum(cert.n[1:cert.K]))
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
@@ -173,16 +173,16 @@ def solveFprG_SDP_Adv2(
             print("Nombre de contraintes actuelles apres X00=1 : ", num_contrainte)
 
 
-            # Contrainte 11 : Enveloppes de McCormick sur zk^2
-            if coupes["zk^2"] : 
+            # Contrainte 11 : Enveloppes de McCormick sur 
+            if coupes["zk2"] : 
                 num_contrainte = contrainte_McCormick_zk2(
-                    task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte
+                    task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte
                 )
                 #if verbose : 
                 print("Nombre de contraintes actuelles apres 11 : ", num_contrainte)
 
             # Contrainte 12 : Linearisation de Fortet sur les betas
-            if coupes["betai*betaj"] :
+            if coupes["betaibetaj"] :
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj_unis(
                     task, cert.K, cert.n, cert.y0, num_contrainte, sigmas = True, par_couches= False
                 )
@@ -190,14 +190,14 @@ def solveFprG_SDP_Adv2(
                 print("Nombre de contraintes actuelles apres 12 : ", num_contrainte)
 
             # Contrainte 13 : Enveloppes de McCormick sur le produit zkj * sigmakj
-            if coupes["sigmak*zk"] : 
+            if coupes["sigmakzk"] : 
                 num_contrainte = contrainte_McCormick_zk_sigmak(
                     task, cert.K, cert.n, cert.U, num_contrainte
                 )
                 #if verbose : 
                 print("Nombre de contraintes actuelles apres 13 : ", num_contrainte)
             
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task,cert.K,cert.n,cert.W,cert.b,cert.x0,cert.epsilon,cert.L,cert.U,num_contrainte)
                 print("Nombre de contraintes apres RLT LAN : ", num_contrainte)
             print("Nombre de contraintes : ", num_contrainte)
@@ -218,6 +218,7 @@ def solveFprG_SDP_Adv2(
             solsta = task.getsolsta(mosek.soltype.itr)
             status = -1
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
+            print("FprG_d Solsta : ", solsta)
             if solsta == solsta.optimal:
                 # Assuming the optimization succeeded read solution
 
@@ -298,7 +299,7 @@ def test():
     rho = 0.01
     epsilon = 5
     relax = 0
-    coupes: Dict[str, bool] = {"zk^2": True, "betai*betaj": True, "sigmak*zk" : True, "RLT_Lan" : True}
+    coupes: Dict[str, bool] = {"zk2": True, "betaibetaj": True, "sigmak*zk" : True, "RLT_Lan" : True}
     ### Résoudre le problème QP
     solution, primal_obj_value, status, time_execution, dic_num_iterations = solveFprG_SDP_Adv2(
         K, n, x0, y0, ycible, U, L, W_reverse, b, epsilon, rho, relax, coupes, verbose=1

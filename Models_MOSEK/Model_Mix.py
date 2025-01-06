@@ -63,15 +63,15 @@ def solveMix_SDP(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] - 1 + cert.n[0] + 2 * cert.n[cert.K]
+            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] - 1 + cert.n[0] + 3 * cert.n[cert.K]
             # Ajout contrainte sur les zk^2
-            if coupes["zk^2"]:
+            if coupes["zk2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout contrainte sur les betas linearisation par Fortet
-            if cert.n[cert.K] > 2 and coupes["betai*betaj"]:
+            if cert.n[cert.K] > 2 and coupes["betaibetaj"]:
                 numcon += (3 * (int(cert.n[cert.K]) - 1) * (int(cert.n[cert.K]) - 2) // 2)
             # Ajout contrainte RLT Lan
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 if verbose :
                     print("AJOUT CONTRAINTES RLT")
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
@@ -128,15 +128,17 @@ def solveMix_SDP(
             # ************ COUPES ***************************
             # ***********************************************
             # Contrainte 11 : Bornes sur zk^2 (RLT)
-            if coupes["zk^2"]:
-                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte)
+            if coupes["zk2"]:
+                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte,
+                                                          par_couches=False, neurones_actifs_stables=cert.neurones_inactifs_stables,
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
                 print("num contrainte apres zk2 : ", num_contrainte)
-            if coupes["betai*betaj"]:
+            if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj(task, cert.K, cert.n, cert.y0,num_contrainte, 
                                                                    par_couches= False)
                 print("num contrainte apres beta : ", num_contrainte)
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte)
                 print("num contrainte apres RLT : ", num_contrainte)
 
@@ -162,6 +164,7 @@ def solveMix_SDP(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
+            print("Mix Solsta : ", solsta)
             if solsta == solsta.optimal:
                 # Assuming the optimization succeeded read solution
 

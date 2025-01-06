@@ -5,7 +5,7 @@
         "Aggregate": null,
         "NonConvex": null,
         "Presolve": null,
-        "TimeLimit": 600,
+        "TimeLimit": 300,
         "MinRelNodes": null,
         "PumpPasses": null,
         "BarConvTol": null,
@@ -13,17 +13,19 @@
         "MIPFocus": null,
         "StartNodeLimit": null,
         "Heuristics": null,
-        "Method": null
+        "Method": null,
+        "DualReduction": 0
     },
-    "rho": 0.001,
-    "epsilon": 5,
-    "epsilon_adv": 0.001,
-    "relax": 0,
+    "rho": 0.01,
+    "epsilon": 3,
+    "epsilon_adv": 0.01,
     "verbose": false,
     "coupes": {
-        "zk^2": false,
-        "betai*betaj": false,
-        "sigmak*zk": false,
-        "RLT_Lan": false
-    }
+        "RLTLan": false,
+        "zk2": false,
+        "betaibetaj": false,
+        "sigmakzk": false,
+        "betaizkj": false
+    },
+    "relax": false
 }

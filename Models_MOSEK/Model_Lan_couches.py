@@ -66,16 +66,18 @@ def solve_Lan_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 3 + 3 * cert.n[cert.K] + sum(cert.n[:cert.K]) + cert.n[0] + cert.K + 2 * cert.n[cert.K] - 2
+            numcon = sum(cert.n[1:cert.K]) * 3 + 3 * cert.n[cert.K] + sum(cert.n[:cert.K]) + cert.n[0] + cert.K + 3 * cert.n[cert.K] - 2
             # Ajout contrainte sur les zk^2
-            if coupes["zk^2"]:
+            if coupes["zk2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout contrainte RLT Lan
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
-            print('Nombre de contraintes initialisées : ', numcon)
+            
+            if verbose :
+                print('Nombre de contraintes initialisées : ', numcon)
 
             task.appendcons(numcon)
 
@@ -121,11 +123,13 @@ def solve_Lan_couches(
             # ************ COUPES ***************************
             # ***********************************************
             # Contrainte 8 : Bornes sur zk^2 
-            if coupes["zk^2"]:
-                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte,par_couches=True)
+            if coupes["zk2"]:
+                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, 
+                                                          num_contrainte,par_couches=True, neurones_actifs_stables=cert.neurones_actifs_stables,
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
                 print("num contrainte apres zk2 : ", num_contrainte)
             # Contrainte 9 : Contraintes RLT
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon,
                                                 cert.L, cert.U,num_contrainte,par_couches=True)
                 print("num contrainte apres RLT : ", num_contrainte)
@@ -150,7 +154,7 @@ def solve_Lan_couches(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
-            print("Solsta : ", solsta)
+            print("Lan couches Solsta : ", solsta)
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)

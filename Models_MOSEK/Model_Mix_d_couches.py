@@ -74,19 +74,19 @@ def solve_Mix_SDP_objbetas_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             adapte_parametres_mosek(task)
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 4 + 8 * cert.n[cert.K] + cert.n[0] + cert.K - 4 + cert.n[0] - 1 + 2 *  cert.n[cert.K]
+            numcon = sum(cert.n[1:cert.K]) * 5 + 8 * cert.n[cert.K] + cert.n[0] + cert.K - 4 + cert.n[0] - 1 + 3 *  cert.n[cert.K]
             # Ajout contrainte sur les zk^2
-            if coupes["zk^2"]:
+            if coupes["zk2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout contrainte sur les betas linearisation par Fortet
-            if cert.n[cert.K] > 2 and coupes["betai*betaj"]:
+            if cert.n[cert.K] > 2 and coupes["betaibetaj"]:
                 # numcon += (3 * (int(n[K]) - 1) * (int(n[K]) - 2) // 2)
                 numcon += int(cert.n[cert.K] * (cert.n[cert.K]-1) // 2)
             # Ajout contrainte RLT Lan
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 numcon += ( 3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)) )
-            if coupes["betai*zkj"] :
+            if coupes["betaizkj"] :
                 numcon+= (2 * (cert.n[cert.K]-1) * sum(cert.n)) 
 
             print("numcon : ", numcon)
@@ -152,6 +152,7 @@ def solve_Mix_SDP_objbetas_couches(
             # ***** Contrainte 8 :   Bornes sur les zkj hidden layers   *****
             #num_contrainte = contrainte_borne_couches_internes(task,K,n,U,num_contrainte,par_couches=True)
             num_contrainte = contrainte_quadratique_bornes(task,cert.K,cert.n,cert.L,cert.U,cert.x0,cert.epsilon,num_contrainte,par_couches=True)
+            num_contrainte = contrainte_borne_couches_internes(task, cert.K,cert.n,cert.U,num_contrainte,par_couches = True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 8", num_contrainte)
 
@@ -177,18 +178,20 @@ def solve_Mix_SDP_objbetas_couches(
             # ************ COUPES ***************************
             # ***********************************************
             # Contrainte 11 : Bornes sur zk^2 (RLT)
-            if coupes["zk^2"]:
-                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte,par_couches=True)
+            if coupes["zk2"]:
+                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte,
+                                                          par_couches=True, neurones_actifs_stables=cert.neurones_actifs_stables,
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
 
-            if coupes["betai*betaj"]:
+            if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 # num_contrainte = contrainte_Mc_Cormick_betai_betaj_unis(task,K,n,ytrue,num_contrainte)
-                num_contrainte = contrainte_produit_betas_nuls_Adv2_Adv3(task, cert.K, cert.n, cert.ytrue, num_contrainte,par_couches=True)
+                num_contrainte = contrainte_produit_betas_nuls_Adv2_Adv3(task, cert.K, cert.n, cert.y0, num_contrainte,par_couches=True)
 
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte,par_couches=True)
 
-            if coupes["betai*zkj"]:
+            if coupes["betaizkj"]:
                 num_contrainte = contrainte_Mc_Cormick_betai_zkj(task, cert.K, cert.n, cert.y0, cert.U, num_contrainte, par_couches = True)
             
             #print("Nombre de contraintes après contrainte McCormick betai zkj", num_contrainte)
@@ -212,6 +215,7 @@ def solve_Mix_SDP_objbetas_couches(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
+            print("Mix d couches Solsta : ", solsta)
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)

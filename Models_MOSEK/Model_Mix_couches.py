@@ -63,16 +63,16 @@ def solveMix_SDP_par_couches(
             task.set_Stream(mosek.streamtype.log, streamprinter)
             
             numvar = 0  # Variables "indépendantes" -rien ici
-            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + cert.K +1 + sum(cert.n[1:cert.K]) + cert.n[0] + 2 * cert.n[cert.K] - 2
+            numcon = sum(cert.n[1:cert.K]) * 2 + 5 * cert.n[cert.K] + sum(cert.n[1:cert.K]) + cert.n[0] + cert.K +1 + sum(cert.n[1:cert.K]) + cert.n[0] + 3 * cert.n[cert.K] - 2
 
             # Ajout contrainte sur les zk^2
-            if coupes["zk^2"]:
+            if coupes["zk2"]:
                 numcon += (2 * sum(cert.n[1:cert.K]) + 3 * cert.n[0])
             # Ajout contrainte sur les betas linearisation par Fortet
-            if cert.n[cert.K] > 2 and coupes["betai*betaj"]:
+            if cert.n[cert.K] > 2 and coupes["betaibetaj"]:
                 numcon += (3 * (int(cert.n[cert.K]) - 1) * (int(cert.n[cert.K]) - 2) // 2)
             # Ajout contrainte RLT Lan
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
@@ -134,13 +134,15 @@ def solveMix_SDP_par_couches(
             # ************ COUPES ***************************
             # ***********************************************
             # Contrainte 11 : Bornes sur zk^2 (RLT)
-            if coupes["zk^2"]:
-                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.epsilon, num_contrainte, par_couches = True)
+            if coupes["zk2"]:
+                num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte, 
+                                                          par_couches = True, neurones_actifs_stables=cert.neurones_actifs_stables,
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
                 print("num contrainte apres zk^2 : ", num_contrainte)
-            if coupes["betai*betaj"]:
+            if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj(task,cert.K, cert.n, cert.y0, num_contrainte, par_couches = True)
-            if coupes["RLT_Lan"]:
+            if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U,num_contrainte, par_couches = True)
                 print("num contrainte apres RLT Lan : ", num_contrainte)
             print("Nombre de contraintes : ", num_contrainte)
@@ -164,6 +166,7 @@ def solveMix_SDP_par_couches(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
+            print("Mix couches Solsta : ", solsta)
             if solsta == solsta.optimal:
                 # Assuming the optimization succeeded read solution
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)

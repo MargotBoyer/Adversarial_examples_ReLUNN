@@ -12,7 +12,8 @@ def contrainte_McCormick_zk2(task : mosek.Task,
                             K : int, 
                             n : List[int], 
                             x0 : List[float], 
-                            U : List[float], 
+                            U : List[List[float]], 
+                            L : List[List[float]], 
                             epsilon : float,
                             num_contrainte : int,
                             par_couches : bool = False,
@@ -54,7 +55,7 @@ def contrainte_McCormick_zk2(task : mosek.Task,
         task.putconboundlist([num_contrainte], [mosek.boundkey.up], [-inf], [-ub * lb])
         num_contrainte += 1
     # Contrainte sur les hidden layers
-    for k in range(1, K+1):
+    for k in range(1, K):
         for j in range(n[k]):
             if (k, j) in neurones_inactifs_stables + neurones_actifs_stables:
                 continue
@@ -107,6 +108,77 @@ def contrainte_McCormick_zk2(task : mosek.Task,
             else:
                 task.putconboundlist([num_contrainte], [mosek.boundkey.up], [-inf], [0])
             num_contrainte += 1
+    # Contrainte sur la derniere couche (pas forcement positive)
+    for j in range(n[K]):
+        # ***** Contrainte U^2 - 2 zK U + zK^2 >= 0 *************************
+        if par_couches:
+            task.putbarablocktriplet(
+                [num_contrainte, num_contrainte],
+                [K-1, K-1],
+                [1 + n[K-1] + j, 1 + n[K-1] + j],
+                [1  + n[K-1] + j, 0],
+                [1, - U[K][j]],
+            )
+        else :
+            task.putbarablocktriplet(
+                [num_contrainte, num_contrainte],
+                [0, 0],
+                [return_i_from_k_j__variable_z(K,j,n), return_i_from_k_j__variable_z(K,j,n)],
+                [return_i_from_k_j__variable_z(K,j,n), 0],
+                [1, -U[K][j]],
+            )
+        # Bornes
+        task.putconboundlist(
+            [num_contrainte], [mosek.boundkey.lo], [-U[K][j] * U[K][j]], [inf]
+        )
+        num_contrainte += 1
+
+
+        # ***** Contrainte L^2 - 2 zK L + zK^2 >= 0 *************************
+        if par_couches:
+            task.putbarablocktriplet(
+                [num_contrainte, num_contrainte],
+                [K-1, K-1],
+                [1 + n[K-1] + j, 1 + n[K-1] + j],
+                [1  + n[K-1] + j, 0],
+                [1, - L[K][j]],
+            )
+        else :
+            task.putbarablocktriplet(
+                [num_contrainte, num_contrainte],
+                [0, 0],
+                [return_i_from_k_j__variable_z(K,j,n), return_i_from_k_j__variable_z(K,j,n)],
+                [return_i_from_k_j__variable_z(K,j,n), 0],
+                [1, -L[K][j]],
+            )
+        # Bornes
+        task.putconboundlist(
+            [num_contrainte], [mosek.boundkey.lo], [-L[K][j] * L[K][j]], [inf]
+        )
+        num_contrainte += 1
+
+        # ***** Contrainte zK^2 <= zK U + L zK - LU *************************
+        if par_couches:
+            task.putbarablocktriplet(
+                [num_contrainte, num_contrainte],
+                [K-1, K-1],
+                [1 + n[K-1] + j,  1 + n[K-1] + j],
+                [1  + n[K-1] + j,  0],
+                [1, - (L[K][j] + U[K][j])],
+            )
+        else :
+            task.putbarablocktriplet(
+                [num_contrainte, num_contrainte],
+                [0, 0],
+                [return_i_from_k_j__variable_z(K,j,n), return_i_from_k_j__variable_z(K,j,n)],
+                [return_i_from_k_j__variable_z(K,j,n), 0],
+                [1, -(L[K][j]+U[K][j])],
+            )
+        # Bornes
+        task.putconboundlist(
+            [num_contrainte], [mosek.boundkey.up], [-L[K][j] * U[K][j]], [inf]
+        )
+        num_contrainte += 1
     return num_contrainte
 
 
@@ -321,7 +393,7 @@ def contrainte_Mc_Cormick_betai_zkj(task : mosek.Task,
                         task.putconboundlist([num_contrainte], [mosek.boundkey.fx], [0], [0])
                         num_contrainte += 1
                         continue
-                    
+
                     zj = return_i_from_k_j__variable_z(k,j,n)
                     # Contrainte : betai * zkj <= U betai ******************
                     
@@ -530,7 +602,7 @@ def coupes_RLT_LAN(task : mosek.Task,
     # (Contrainte triangulaire déjà présente dans le modèle de l'article LAN2022)
     for k in range(1, K):
         for j in range(n[k]):
-            print(f"Neurone {j} couche {k} : U = {U[k][j]} et L = {L[k][j]}")
+            # print(f"Neurone {j} couche {k} : U = {U[k][j]} et L = {L[k][j]}")
             ReLU_L_k_j = L[k][j] 
             ReLU_U_k_j = U[k][j] 
             if L[k][j] < 0:

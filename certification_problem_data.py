@@ -342,30 +342,31 @@ class Certification_Problem_Data:
         return L_x0, U_x0, neurones_actifs_stables, neurones_inactifs_stables
     
 
-    def apply(self, optimization_model: str, parametres_reseau, parametres_optimisation, verbose : bool = False):
+    def apply(self, optimization_model: str, parametres_reseau, parametres_optimisation, titre, verbose : bool = False):
         parametres_reseau["L"] = self.L
         parametres_reseau["U"] = self.U
         if optimization_model in optimization_models_gurobi:
             self.apply_gurobi(
-                optimization_model, parametres_optimisation, parametres_reseau, verbose = verbose)
+                optimization_model, parametres_optimisation, parametres_reseau, titre, verbose = verbose)
         elif optimization_model in optimization_models_mosek:
             self.apply_mosek(
-                optimization_model, parametres_optimisation, parametres_reseau, verbose = verbose)
+                optimization_model, parametres_optimisation, parametres_reseau, titre, verbose = verbose)
         self.optimization_models.append(optimization_model)
 
-    def apply_mosek(self, optimization_model: str, parametres_optimisation, parametres_reseau, verbose : bool = False):
+
+    def apply_mosek(self, optimization_model: str, parametres_optimisation, parametres_reseau, titre, verbose : bool = False):
         ycible = cherche_ycible(self.y0, self.n[self.K])
 
-        coupes_totales = ["RLT_Lan", "zk^2", "betai*betaj","sigmak*zk","betai*zkj"]
+        coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj"]
         if optimization_model in ["FprG_SDP","FprG_d_SDP"]:
-            #coupes_noms = ["RLT_Lan", "zk^2", "betai*betaj","sigmak*zk"]
-            coupes_noms = ["zk^2", "betai*betaj","sigmak*zk"]
+            coupes_noms = ["RLTLan", "zk2", "betaibetaj","sigmakzk"]
+            #coupes_noms = ["zk^2", "betai*betaj","sigmak*zk"]
         elif optimization_model in ["Lan_SDP","Lan_couches_SDP"]:
-            #coupes_noms = ["RLT_Lan", "zk^2"]
-            coupes_noms = ["zk^2"]
+            coupes_noms = ["RLTLan", "zk2"]
+            #coupes_noms = ["zk^2"]
         elif optimization_model in ["Mix_SDP", "Mix_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP"]:
-            #coupes_noms = ["RLT_Lan", "zk^2", "betai*betaj","betai*zkj"]
-            coupes_noms = ["zk^2", "betai*betaj","betai*zkj"]
+            coupes_noms = ["RLTLan", "zk2", "betaibetaj","betaizkj"]
+            #coupes_noms = ["zk^2", "betai*betaj","betai*zkj"]
 
         dict_coupes_false = {coupe : False for coupe in coupes_totales if coupe not in coupes_noms}
         coupes_combinaisons_model = list(itertools.product([True, False], repeat=len(coupes_noms)))
@@ -374,25 +375,61 @@ class Certification_Problem_Data:
         
         for coupe in dict_coupes_combinaisons_model:
             parametres_optimisation["coupes"] = coupe
-            Sol, opt, status, execution_time, dic_infos = compute_adverse(optimization_model,parametres_reseau, 
-            parametres_optimisation, self.x0, self.y0, ycible, self.neurones_actifs_stables, self.neurones_inactifs_stables)
+            Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, coupes = coupe)
             self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
 
-    def apply_gurobi(self, optimization_model: str, parametres_optimisation, parametres_reseau, verbose : bool = False):
+    def apply_gurobi(self, optimization_model: str, parametres_optimisation, parametres_reseau, titre, verbose : bool = False):
         ycible = cherche_ycible(self.y0, self.n[self.K])
-        coupes_totales = ["RLT_Lan", "zk^2", "betai*betaj","sigmak*zk","betai*zkj"]
+        coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj"]
         parametres_optimisation["coupes"] = {coupe_nom : False for coupe_nom in coupes_totales}
+
         if optimization_model in optimization_models_lineaires:
-            parametres_optimisation["relax"] = False
-            Sol, opt, status, execution_time, dic_infos = compute_adverse(optimization_model,parametres_reseau, 
-            parametres_optimisation, self.x0, self.y0, ycible)
+            parametres_optimisation["relax"] = True
+            Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, relax = True)
             self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
-        # parametres_optimisation["relax"] = True
-        # Sol, opt, status, execution_time, dic_infos = compute_adverse(optimization_model, parametres_reseau, 
-        #     parametres_optimisation, self.x0, self.y0, ycible)
-        # self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
+
+        parametres_optimisation["relax"] = False
+        Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, relax = False)
+        self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
+
+
         
+
+    # optimization_models_mosek = [ "Mix_SDP","Mix_couches_SDP","Mix_d_SDP","FprG_SDP","Mix_d_couches_SDP","Lan_SDP","Lan_couches_SDP"]
+    def solve(self, optimization_model: str, titre, coupes = None, relax = None):
+
+        if optimization_model == "Fischetti_Obj_diff":
+            return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre)
+        elif optimization_model == "FprG_quad":
+            return GUROBI_FprG.solveFprG_quad(self,relax,titre)
+        elif optimization_model == "Mix_diff_obj_quad":
+            return GUROBI_Mix_diff.solveMix_diff_obj_quad(self,relax,titre)
+        elif optimization_model == "Lan_quad":
+            ycible = cherche_ycible(self.y0, self.n[self.K])
+            return GUROBI_Lan_quad.solve_Lan_quad(self,ycible,relax,titre)
+        elif optimization_model == "ReLUconvexe_Adv1":
+            return GUROBI_ReLU_convexe.solve_ReLUconvexe_Adv1(self,relax,titre)
+        elif optimization_model == "Mix_SDP":
+            return MOSEK_Mix.solveMix_SDP(self,coupes,titre, verbose = False)
+        elif optimization_model == "Mix_couches_SDP":
+            return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre, verbose = False)
+        elif optimization_model == "Mix_d_SDP":
+            return MOSEK_Mix_d.solveMix_SDP_objbetas(self,coupes,titre, verbose = False)
+        elif optimization_model == "FprG_SDP":
+            return MOSEK_FprG.solveFprG_SDP(self,coupes, titre,verbose = False)
+        elif optimization_model == "Mix_d_couches_SDP":
+            return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre, verbose = False)
+        elif optimization_model == "Lan_SDP":
+            ycible = cherche_ycible(self.y0, self.n[self.K])
+            return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, verbose = False)
+        elif optimization_model == "Lan_couches_SDP":
+            ycible = cherche_ycible(self.y0, self.n[self.K])
+            return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre, verbose = False)
+        else :
+            print("Modèle non reconnu")
+        
+    
     def solveFprG_SDP_Adv2(self, coupes, titre):
         return MOSEK_FprG_d.solveFprG_SDP_Adv2(self,coupes, titre,verbose = False)
     

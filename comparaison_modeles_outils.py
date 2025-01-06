@@ -444,3 +444,17 @@ def create_folder_benchmark_(
         print("resultats : ", resultats_df)
         resultats_df.to_csv(resultats_file_path, index=False)
         print(f"Résultats enregistrés dans : {resultats_file_path}")
+
+
+def remove_folder_benchmark(data_modele):
+    """ Supprime le dossier de benchmark """
+    folder_dir = f"datasets\{data_modele}\Benchmark"
+    if os.path.exists(folder_dir) and os.path.isdir(folder_dir):
+        for item in os.listdir(folder_dir):
+            item_path = os.path.join(folder_dir, item)
+            if os.path.isdir(item_path):
+                # Supprimer le dossier et tous ses composants
+                shutil.rmtree(item_path)
+                print(f"Removed folder: {item_path}")
+    else:
+        print(f"Dossier de benchmark inexistant : {folder_dir}")
