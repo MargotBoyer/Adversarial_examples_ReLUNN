@@ -72,7 +72,7 @@ class Reseau(nn.Module):
 
     def retourne_label(self, x):
         res = self.forward(x)
-        print("Sortie du reseau : ", res)
+        # print("Sortie du reseau : ", res)
         label = torch.argmax(res)
         return label.item()
 
@@ -194,7 +194,7 @@ def architectures_modele(modele, architecture = None):
 
 
 if __name__ == "__main__":
-    modele = "MULTIPLE_CIRCLES"
+    modele = "MOON"
     architecture = None
 
     if modele == "MOON" :

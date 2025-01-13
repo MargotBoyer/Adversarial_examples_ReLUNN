@@ -50,7 +50,7 @@ def solve_Lan_quad(
                                                    cert.L,cert.n,cert.epsilon)
 
     # Contraintes couches internes avec ReLU
-    add_hidden_layer_constraints_quad(m,z,cert.W,cert.b,cert.K,cert.n)
+    add_hidden_layer_constraints_quad(m,z,cert.W,cert.b,cert.K,cert.n,cert.neurones_actifs_stables, cert.neurones_inactifs_stables)
 
     #m.printStats()
     m.write("Models_gurobi/lp/Lan_quad.lp")
@@ -73,12 +73,13 @@ def solve_Lan_quad(
         for j in range(cert.n[0]):
             Sol.append(z[0,j].X)
         status=1
-        for j in range(cert.n[cert.K]):
-            if j== cert.y0  :
-                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W[cert.K-1][cert.y0][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
-            else :
-                print(f"Sortie pour j={j}] : {gp.quicksum(cert.W[cert.K-1][j][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
-    
+        if verbose :
+            for j in range(cert.n[cert.K]):
+                if j== cert.y0  :
+                    print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W[cert.K-1][cert.y0][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
+                else :
+                    print(f"Sortie pour j={j}] : {gp.quicksum(cert.W[cert.K-1][j][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
+        
    
         classes_finales = []
         for j in range(cert.n[cert.K]):

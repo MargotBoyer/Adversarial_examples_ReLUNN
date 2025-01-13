@@ -56,7 +56,7 @@ def solveMix_diff_obj_quad(
     # Contraintes sur les bornes pour les hidden layers :
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layer_constraints_quad(m,z,cert.W,cert.b,cert.K,cert.n)
+    add_hidden_layer_constraints_quad(m,z,cert.W,cert.b,cert.K,cert.n,cert.neurones_actifs_stables, cert.neurones_inactifs_stables)
     
     # Contrainte derniere couche sans ReLU
 
@@ -98,13 +98,15 @@ def solveMix_diff_obj_quad(
         for j in range(cert.n[cert.K]):
             betas.append(beta[j].X)
         status=1
-        print("Betas : ", betas)
-        for j in range(cert.n[cert.K]):
-            if j== cert.y0  :
-                print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W[cert.K-1][cert.y0][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
-            else :
-                print(f"Sortie pour j={j}] : {gp.quicksum(cert.W[cert.K-1][j][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
-        
+        if verbose :
+            print("Betas : ", betas)
+        if verbose : 
+            for j in range(cert.n[cert.K]):
+                if j== cert.y0  :
+                    print(f"Sortie pour j=ytrue={j} : {gp.quicksum(cert.W[cert.K-1][cert.y0][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][cert.y0]}")
+                else :
+                    print(f"Sortie pour j={j}] : {gp.quicksum(cert.W[cert.K-1][j][i] * z[cert.K-1,i].X for i in range(cert.n[cert.K-1])) + cert.b[cert.K-1][j]}")
+            
         # if False:
         #     for k in range(K+1):
         #         vector_post_activation = []
@@ -143,6 +145,7 @@ def solveMix_diff_obj_quad(
         if verbose :
             print("Statut modele : ", m.Status)
     return Sol,opt,status,0, {"Number_Nodes" : nb_nodes}
+
 
 def test():
     K=3

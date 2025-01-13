@@ -11,12 +11,15 @@ from MOSEK_objective import (
 from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    save_matrice,
+    imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
     contrainte_exemple_adverse_somme_beta_superieure_1,
-    contrainte_beta_discret
+    contrainte_beta_discret,
+    contrainte_borne_somme_betaz
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_borne_couches_internes,
@@ -77,7 +80,8 @@ def solveMix_SDP(
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
-            print('numcon total : ', numcon)
+
+            # print('numcon total : ', numcon)
             # Ajoute 'numcon' contraintes vides.
             # Les contraintes n'ont pas de bornes initialement.
             task.appendcons(numcon)
@@ -123,7 +127,8 @@ def solveMix_SDP(
 
             # Contrainte 10 : X00 = 1 (Le premier terme de la matrice variable est 1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,2,num_contrainte)
-            print("num contrainte apres XOO = 1 : ", num_contrainte)
+            if verbose :
+                print("num contrainte apres XOO = 1 : ", num_contrainte)
             # ***********************************************
             # ************ COUPES ***************************
             # ***********************************************
@@ -132,23 +137,28 @@ def solveMix_SDP(
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte,
                                                           par_couches=False, neurones_actifs_stables=cert.neurones_inactifs_stables,
                                                           neurones_inactifs_stables=cert.neurones_inactifs_stables)
-                print("num contrainte apres zk2 : ", num_contrainte)
+                if verbose :
+                    print("num contrainte apres zk2 : ", num_contrainte)
             if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj(task, cert.K, cert.n, cert.y0,num_contrainte, 
                                                                    par_couches= False)
-                print("num contrainte apres beta : ", num_contrainte)
+                if verbose :
+                    print("num contrainte apres beta : ", num_contrainte)
             if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte)
-                print("num contrainte apres RLT : ", num_contrainte)
+                if verbose: 
+                    print("num contrainte apres RLT : ", num_contrainte)
 
-            print("Nombre de contraintes : ", num_contrainte)
+            if verbose : 
+                print("Nombre de contraintes : ", num_contrainte)
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 
             # Write the problem for human inspection
 
             task.writedata("Models_MOSEK/ptf/Model_Mix.ptf")
+            imprime_ptf(cert,task,"Mix_SDP",titre,coupes)
 
             # Résoudre le problème
             start_time = time.time()
@@ -174,7 +184,17 @@ def solveMix_SDP(
                 z = reconstitue_matrice(sum(cert.n) + 1, z_sol)
                 beta = reconstitue_matrice(cert.n[cert.K], beta_sol)
 
-                affiche_matrice(cert,z,"Mix_SDP",titre,coupes,nom_variable="z")
+                if cert.data_modele != "MNIST":
+                    affiche_matrice(cert,z,"Mix_SDP",titre,coupes,nom_variable="z")
+                else :
+                    n_rows, ncols = z.shape
+                    mask_beta = np.ones((n_rows), dtype = bool) 
+                    mask_beta[1:( 1+cert.n[0] )] = False
+                    T = z[np.outer(mask_beta, mask_beta)].reshape(1+ sum(cert.n[1:]), 1 + sum(cert.n[1:]))
+                    print("T mask shape : ", T.shape)
+                    save_matrice(cert,T,
+                                 "Mix_SDP", titre, coupes, nom_variable = "z_sans_input")
+                
                 affiche_matrice(cert,beta,"Mix_SDP",titre,coupes,nom_variable="beta")
 
                 if verbose:

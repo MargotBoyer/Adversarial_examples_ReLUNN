@@ -57,22 +57,31 @@ def add_hidden_layer_constraints_with_s(
         W : List[List[List[float]]], 
         b : List[List[float]], 
         U : List[List[float]], 
-        L : List[List[float]]):
+        L : List[List[float]],
+        neurones_actifs_stables : List = [],
+        neurones_inactifs_stables : List = []):
     """ Contrainte ReLU1 """
     for k in range(1, K):
         for j in range(n[k]):
+            if (k,j) in neurones_inactifs_stables :
+                    m.addConstr(z[k, j] == 0)
+                    continue
+            elif (k,j) in neurones_actifs_stables :
+                    m.addConstr(z[k, j] == gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) 
+                                + b[k - 1][j])
+                    continue
             m.addConstr(
                 gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]
                 == z[k, j] - s[k, j]
             )
 
-    for k in range(1, K):
-        for j in range(n[k]):
             m.addConstr(z[k, j] <= U[k][j] * sigma[k, j])
             m.addConstr(s[k, j] <= -L[k][j] * (1 - sigma[k, j]))
             m.addConstr(s[k, j] >= 0)
             m.addConstr(s[k, j] <= -L[k][j])
+
+            
 
 
 def add_hidden_layer_constraints_quad(
@@ -81,10 +90,19 @@ def add_hidden_layer_constraints_quad(
         W : List[List[List[float]]], 
         b : List[List[float]], 
         K : int, 
-        n : List[int]):
+        n : List[int],
+        neurones_actifs_stables : List = [],
+        neurones_inactifs_stables : List = []):
     """ Contrainte ReLU4 """
     for k in range(1, K):
         for j in range(n[k]):
+            if (k,j) in neurones_inactifs_stables :
+                    m.addConstr(z[k, j] == 0)
+                    continue
+            elif (k,j) in neurones_actifs_stables :
+                    m.addConstr(z[k, j] == gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) 
+                                + b[k - 1][j])
+                    continue
             m.addConstr(gp.quicksum(W[k-1][j][i] * z[k-1, i] for i in range(n[k-1])) + b[k-1][j] <= z[k, j])
             m.addConstr((z[k, j] - gp.quicksum(W[k-1][j][i] * z[k-1, i] for i in range(n[k-1])) - b[k-1][j]) * z[k, j] == 0)
 
@@ -98,10 +116,19 @@ def add_hidden_layer_constraints_with_sigma_quad(
         K : int, 
         n : List[int], 
         U : List[List[float]], 
-        L : List[List[float]]):
+        L : List[List[float]],
+        neurones_actifs_stables : List = [],
+        neurones_inactifs_stables : List = []):
     """ Contrainte ReLU3 """
     for k in range(1, K):
         for j in range(n[k]):
+            if (k,j) in neurones_inactifs_stables :
+                    m.addConstr(z[k, j] == 0)
+                    continue
+            elif (k,j) in neurones_actifs_stables :
+                    m.addConstr(z[k, j] == gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1])) 
+                                + b[k - 1][j])
+                    continue
             m.addConstr(
                 gp.quicksum(W[k - 1][j][i] * z[k - 1, i] for i in range(n[k - 1]))
                 + b[k - 1][j]

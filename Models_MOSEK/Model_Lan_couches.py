@@ -11,12 +11,14 @@ from MOSEK_objective import (
 from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
     contrainte_exemple_adverse_somme_beta_superieure_1,
-    contrainte_beta_discret
+    contrainte_beta_discret,
+    contrainte_borne_somme_betaz
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_quadratique_bornes,
@@ -75,7 +77,6 @@ def solve_Lan_couches(
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
-            
             if verbose :
                 print('Nombre de contraintes initialisées : ', numcon)
 
@@ -115,7 +116,6 @@ def solve_Lan_couches(
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # Contrainte 7 : X00 = 1 (Le premier terme de la matrice variable est 1)
-            print("cert.K - 1 : ", cert.K-1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes après XOO = 1 : ", num_contrainte)
@@ -127,12 +127,14 @@ def solve_Lan_couches(
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, 
                                                           num_contrainte,par_couches=True, neurones_actifs_stables=cert.neurones_actifs_stables,
                                                           neurones_inactifs_stables=cert.neurones_inactifs_stables)
-                print("num contrainte apres zk2 : ", num_contrainte)
+                if verbose : 
+                    print("num contrainte apres zk2 : ", num_contrainte)
             # Contrainte 9 : Contraintes RLT
             if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon,
                                                 cert.L, cert.U,num_contrainte,par_couches=True)
-                print("num contrainte apres RLT : ", num_contrainte)
+                if verbose : 
+                    print("num contrainte apres RLT : ", num_contrainte)
 
             if verbose : 
                 print("Nombre de contraintes ajoutées dans le modèle : ", num_contrainte)
@@ -140,6 +142,7 @@ def solve_Lan_couches(
             task.putobjsense(mosek.objsense.minimize)
 
             task.writedata("Models_MOSEK/ptf/Model_Lan_couches.ptf")
+            imprime_ptf(cert,task,"Lan_couches_SDP",titre,coupes,ycible)
 
             # Résoudre le problème
             start_time = time.time()
@@ -154,17 +157,19 @@ def solve_Lan_couches(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
-            print("Lan couches Solsta : ", solsta)
+            print(f"Lan couches Solsta ycible = {ycible}: ", solsta)
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
+
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{0}")
+                if cert.data_modele != "MNIST" :
+                    affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{0}")
                 # Assuming the optimization succeeded read solution
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
-                    print("Matrice z_i : ", z_i)
-                    affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
+                    #print("Matrice z_i : ", z_i)
+                    affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,coupes,ycible=ycible,nom_variable=f"z_{i}")
 
 
                 # Obtenir la valeur du problème primal

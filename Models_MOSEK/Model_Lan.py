@@ -11,12 +11,15 @@ from MOSEK_objective import (
 from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    save_matrice,
+    imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
     contrainte_exemple_adverse_somme_beta_superieure_1,
-    contrainte_beta_discret
+    contrainte_beta_discret,
+    contrainte_borne_somme_betaz
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_quadratique_bornes,
@@ -72,7 +75,8 @@ def solve_Lan(
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
 
-            print('numcon total : ', numcon)
+            if verbose : 
+                print('numcon total : ', numcon)
 
             task.appendcons(numcon)
 
@@ -115,11 +119,13 @@ def solve_Lan(
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte,
                                                           par_couches = False, neurones_actifs_stables=cert.neurones_actifs_stables,
                                                           neurones_inactifs_stables=cert.neurones_inactifs_stables)
-                print("num contrainte apres zk2 : ", num_contrainte)
+                if verbose : 
+                    print("num contrainte apres zk2 : ", num_contrainte)
             # Contrainte 9 : Contraintes RLT
             if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte)
-                print("num contrainte apres RLT : ", num_contrainte)
+                if verbose : 
+                    print("num contrainte apres RLT : ", num_contrainte)
 
             if verbose : 
                 print("Nombre final de contraintes : ", num_contrainte)
@@ -127,6 +133,7 @@ def solve_Lan(
             task.putobjsense(mosek.objsense.minimize)
 
             task.writedata("Models_MOSEK/ptf/Model_Lan.ptf")
+            imprime_ptf(cert,task,"Lan_SDP",titre,coupes,ycible=ycible)
 
             # Résoudre le problème
             start_time = time.time()
@@ -141,13 +148,23 @@ def solve_Lan(
             status = -1
             Sol = []
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
-            print("Lan Solsta : ", solsta)
+            print(f"Lan Solsta : ycible = {ycible}", solsta)
             if solsta == solsta.optimal:
                 # Assuming the optimization succeeded read solution
 
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z = reconstitue_matrice(sum(cert.n) + 1, z_sol)
-                affiche_matrice(cert,z,"Lan_SDP",titre, coupes)
+                if cert.data_modele != "MNIST":
+                    affiche_matrice(cert,z,"Lan_SDP",titre, coupes,ycible=ycible)
+                else :
+                    n_rows, ncols = z.shape
+                    mask_beta = np.ones((n_rows), dtype = bool) 
+                    mask_beta[1:( 1+cert.n[0] )] = False
+                    T = z[np.outer(mask_beta, mask_beta)].reshape(1+ sum(cert.n[1:]), 1 + sum(cert.n[1:]))
+                    print("T mask shape : ", T.shape)
+                    save_matrice(cert,T,
+                                 "Lan_SDP", titre, coupes, nom_variable = "z_sans_input")
+                
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

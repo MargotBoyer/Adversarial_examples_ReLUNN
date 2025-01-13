@@ -61,7 +61,7 @@ def solve_borne_sup_U(
         env.setParam("OutputFlag", 0)
     env.start()
     m = gp.Model("Calcul_Borne_Sup_U", env=env)
-    parametres_gurobi["TimeLimit"] = 300
+    parametres_gurobi["TimeLimit"] = 60
     adapt_parametres_gurobi(m,parametres_gurobi)
 
     z = add_variable_z(m, K, n[:couche+1], L, couche-1, impose_positive=False)
@@ -126,7 +126,7 @@ def solve_borne_inf_L(
         env.setParam("OutputFlag", 0)
     env.start()
     m = gp.Model("Calcul_Borne_Inf_L", env=env)
-    parametres_gurobi["TimeLimit"] = 300
+    parametres_gurobi["TimeLimit"] = 60
     adapt_parametres_gurobi(m,parametres_gurobi)
 
     z = add_variable_z(m, K, n[:couche+1], L, couche-1, impose_positive=False)
@@ -252,7 +252,7 @@ def compute_FULL_U_L(x0, K, n, W, b, L, U, epsilon, relax = False,
         U_couche= []
         if couche==K:
             print("Adaptation du temps limite sur gurobi")
-            parametres_gurobi["TimeLimit"] = 120
+            parametres_gurobi["TimeLimit"] = 60
         for neurone in range(n[couche]):
             if (couche,neurone) in neurones_actifs_stables+ neurones_inactifs_stables:
                 print(f"Le neurone {neurone} de la couche {couche} n'est pas traite car stable.")

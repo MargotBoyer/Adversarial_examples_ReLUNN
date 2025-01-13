@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, Subset
 import itertools
 
-from load import load_data, load_file_weights, retourne_weights, cherche_ycible
+from load import load_data, load_file_weights, retourne_weights, cherche_ycible, liste_ycible
 from reseau_train import Reseau, architectures_modele
 
 from calcule_bornes_reseau import (
@@ -34,6 +34,7 @@ optimization_models_quadratiques = ["Mix","FprG_quad","Mix_diff_obj_quad","Adv2_
                                     "ReLU2_Adv2__FprGdiff__","Adv3_ReLU2_lin","F_ReLU1_Adv3","Adv3_ReLU2_lin",
                                     "ReLU3_Adv3","Adv3_ReLU2","F_ReLU1_Adv3","Lan_quad"]
 optimization_models_gurobi = optimization_models_lineaires + optimization_models_quadratiques
+optimization_models_ycible = ["Fischetti_Obj_dist", "Lan_quad", "Lan_SDP","Lan_couches_SDP"]
 optimization_models_mosek = [ "Mix_SDP","Mix_couches_SDP","Mix_d_SDP","FprG_SDP","Mix_d_couches_SDP","Lan_SDP","Lan_couches_SDP"]
 
 
@@ -351,22 +352,29 @@ class Certification_Problem_Data:
         elif optimization_model in optimization_models_mosek:
             self.apply_mosek(
                 optimization_model, parametres_optimisation, parametres_reseau, titre, verbose = verbose)
+        print("Resultats dans apply : ", self.resultats)
         self.optimization_models.append(optimization_model)
+
+
+    def apply_all_ycible(self, optimization_model: str, parametres_reseau, parametres_optimisation, titre, coupe = None, relax = None, verbose : bool = False):
+        for ycible in liste_ycible(self.y0, self.n[self.K]):
+            Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, coupes = coupe, relax = relax, ycible = ycible, verbose = verbose)
+            self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
 
     def apply_mosek(self, optimization_model: str, parametres_optimisation, parametres_reseau, titre, verbose : bool = False):
         ycible = cherche_ycible(self.y0, self.n[self.K])
 
-        coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj"]
+        coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj","bornes_betaz"]
         if optimization_model in ["FprG_SDP","FprG_d_SDP"]:
-            coupes_noms = ["RLTLan", "zk2", "betaibetaj","sigmakzk"]
-            #coupes_noms = ["zk^2", "betai*betaj","sigmak*zk"]
+            # coupes_noms = ["RLTLan", "zk2", "betaibetaj","sigmakzk"]
+            coupes_noms = ["betaibetaj"]
         elif optimization_model in ["Lan_SDP","Lan_couches_SDP"]:
-            coupes_noms = ["RLTLan", "zk2"]
+            coupes_noms = ["zk2","bornes_betaz"]
             #coupes_noms = ["zk^2"]
         elif optimization_model in ["Mix_SDP", "Mix_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP"]:
-            coupes_noms = ["RLTLan", "zk2", "betaibetaj","betaizkj"]
-            #coupes_noms = ["zk^2", "betai*betaj","betai*zkj"]
+            # coupes_noms = ["RLTLan", "zk2", "betaibetaj","betaizkj"]
+            coupes_noms = ["betaibetaj","bornes_betaz"]
 
         dict_coupes_false = {coupe : False for coupe in coupes_totales if coupe not in coupes_noms}
         coupes_combinaisons_model = list(itertools.product([True, False], repeat=len(coupes_noms)))
@@ -375,57 +383,68 @@ class Certification_Problem_Data:
         
         for coupe in dict_coupes_combinaisons_model:
             parametres_optimisation["coupes"] = coupe
-            Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, coupes = coupe)
-            self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
+            if optimization_model in optimization_models_ycible:
+                self.apply_all_ycible(optimization_model, parametres_reseau, parametres_optimisation, titre, coupe, verbose = verbose)
+            else :
+                Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, coupes = coupe, verbose = verbose)
+                self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
 
-    def apply_gurobi(self, optimization_model: str, parametres_optimisation, parametres_reseau, titre, verbose : bool = False):
+    def apply_gurobi(self,optimization_model: str, parametres_optimisation, parametres_reseau, titre, verbose : bool = False):
         ycible = cherche_ycible(self.y0, self.n[self.K])
-        coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj"]
+        coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj","bornes_betaz"]
         parametres_optimisation["coupes"] = {coupe_nom : False for coupe_nom in coupes_totales}
 
         if optimization_model in optimization_models_lineaires:
             parametres_optimisation["relax"] = True
-            Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, relax = True)
-            self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
+            if optimization_model in optimization_models_ycible:
+                self.apply_all_ycible(optimization_model, parametres_reseau, parametres_optimisation, titre, relax = True, verbose = verbose)
+            else : 
+                Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, relax = True, verbose = verbose)
+                self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
         parametres_optimisation["relax"] = False
-        Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, relax = False)
+        if optimization_model in optimization_models_ycible :
+            self.apply_all_ycible(optimization_model, parametres_reseau, parametres_optimisation, titre, relax = False, verbose= verbose)
+        Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, relax = False, verbose = verbose)
         self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
 
-        
+    
 
     # optimization_models_mosek = [ "Mix_SDP","Mix_couches_SDP","Mix_d_SDP","FprG_SDP","Mix_d_couches_SDP","Lan_SDP","Lan_couches_SDP"]
-    def solve(self, optimization_model: str, titre, coupes = None, relax = None):
+    def solve(self, optimization_model: str, titre, coupes = None, relax = None, ycible = None, verbose = False):
 
         if optimization_model == "Fischetti_Obj_diff":
-            return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre)
+            return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre,verbose)
         elif optimization_model == "FprG_quad":
-            return GUROBI_FprG.solveFprG_quad(self,relax,titre)
+            return GUROBI_FprG.solveFprG_quad(self,relax,titre,verbose)
         elif optimization_model == "Mix_diff_obj_quad":
-            return GUROBI_Mix_diff.solveMix_diff_obj_quad(self,relax,titre)
+            return GUROBI_Mix_diff.solveMix_diff_obj_quad(self,relax,titre,verbose)
         elif optimization_model == "Lan_quad":
-            ycible = cherche_ycible(self.y0, self.n[self.K])
-            return GUROBI_Lan_quad.solve_Lan_quad(self,ycible,relax,titre)
+            if ycible is None:
+                ycible = cherche_ycible(self.y0, self.n[self.K])
+            return GUROBI_Lan_quad.solve_Lan_quad(self,ycible,relax,titre,verbose)
         elif optimization_model == "ReLUconvexe_Adv1":
-            return GUROBI_ReLU_convexe.solve_ReLUconvexe_Adv1(self,relax,titre)
+            return GUROBI_ReLU_convexe.solve_ReLUconvexe_Adv1(self,relax,titre,verbose)
         elif optimization_model == "Mix_SDP":
             return MOSEK_Mix.solveMix_SDP(self,coupes,titre, verbose = False)
         elif optimization_model == "Mix_couches_SDP":
-            return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre, verbose = False)
+            return MOSEK_Mix_couches.solveMix_SDP_par_couches(self,coupes,titre,verbose)
         elif optimization_model == "Mix_d_SDP":
-            return MOSEK_Mix_d.solveMix_SDP_objbetas(self,coupes,titre, verbose = False)
+            return MOSEK_Mix_d.solveMix_SDP_objbetas(self,coupes,titre,verbose)
         elif optimization_model == "FprG_SDP":
-            return MOSEK_FprG.solveFprG_SDP(self,coupes, titre,verbose = False)
+            return MOSEK_FprG.solveFprG_SDP(self,coupes, titre,verbose)
         elif optimization_model == "Mix_d_couches_SDP":
-            return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre, verbose = False)
+            return MOSEK_Mix_d_couches.solve_Mix_SDP_objbetas_couches(self,coupes,titre, verbose)
         elif optimization_model == "Lan_SDP":
-            ycible = cherche_ycible(self.y0, self.n[self.K])
-            return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, verbose = False)
+            if ycible is None:
+                ycible = cherche_ycible(self.y0, self.n[self.K])
+            return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, verbose)
         elif optimization_model == "Lan_couches_SDP":
-            ycible = cherche_ycible(self.y0, self.n[self.K])
-            return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre, verbose = False)
+            if ycible is None :
+                ycible = cherche_ycible(self.y0, self.n[self.K])
+            return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre, verbose)
         else :
             print("Modèle non reconnu")
         
@@ -433,6 +452,7 @@ class Certification_Problem_Data:
     
     def update_resultats(self, optimization_model: str, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos):
         label = -1
+        print("On update le resultat")
         if Sol != []:
             label = self.Res.retourne_label(Sol)
             self.resultats.append({
@@ -442,13 +462,16 @@ class Certification_Problem_Data:
             'y0' : self.y0,
             'ycible' : ycible,
             'modele_opt': f"{optimization_model}",
-            "relax" : parametres_optimisation["relax"],
+            "relax" : parametres_optimisation["relax"] if "relax" in parametres_optimisation.keys() else False,
             'Status' : status,
             'Sol' : Sol,
             'Label' : label  ,
             "Valeur_optimale" : opt,
             'temps_execution': execution_time
         } | parametres_optimisation["coupes"] | dic_infos)
+            
+        print("Resultats : ", self.resultats)
+     
         if Sol != []:
             if self.data_modele == "MNIST":
                 print(f"Modèle d'optimisation : {optimization_model};       Status : {status},  Valeur : {opt},     label = {self.Res.retourne_label(Sol)},    temps : {round(execution_time,3)}")

@@ -9,7 +9,8 @@ from MOSEK_objective import objective_function_diff_betas
 from MOSEK_outils import (
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    imprime_ptf
     )
 from MOSEK_contraintes_adversariales import (
     contrainte_exemple_adverse_somme_beta_egale_1,
@@ -205,6 +206,7 @@ def solveFprG_SDP_Adv2(
             task.putobjsense(mosek.objsense.minimize)
 
             task.writedata("Models_MOSEK/ptf/Model_FprG_d.ptf")
+            imprime_ptf(cert,task,"FprG_d_SDP",titre,coupes)
 
             # Résoudre le problème
             start_time = time.time()

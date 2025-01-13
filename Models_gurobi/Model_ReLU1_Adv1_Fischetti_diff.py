@@ -53,7 +53,8 @@ def solveFischetti_Objdiff(
     add_initial_ball_constraints(m,z,cert.x0,cert.epsilon, cert.n, cert.L[0], cert.U[0])
 
     # Contraintes hidden layers avec ReLU
-    add_hidden_layer_constraints_with_s(m, z, s, sigma, cert.K, cert.n, cert.W, cert.b, cert.U, cert.L)
+    add_hidden_layer_constraints_with_s(m, z, s, sigma, cert.K, cert.n, cert.W, cert.b, 
+                                        cert.U, cert.L, cert.neurones_actifs_stables, cert.neurones_inactifs_stables)
 
     # Contrainte derniere couche sans ReLU
 

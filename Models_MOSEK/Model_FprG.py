@@ -9,7 +9,8 @@ from MOSEK_objective import objective_function_diff
 from MOSEK_outils import (
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    imprime_ptf
     )
 from MOSEK_contraintes_adversariales import (
     contrainte_exemple_adverse_beta_u,
@@ -172,36 +173,40 @@ def solveFprG_SDP(
                 num_contrainte = contrainte_McCormick_zk2(
                     task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte
                 )
-                #if verbose : 
-                print("Nombre de contraintes actuelles apres 11 : ", num_contrainte)
+                if verbose : 
+                    print("Nombre de contraintes actuelles apres 11 : ", num_contrainte)
 
             # Contrainte 12 : Linearisation de Fortet sur les betas
             if coupes["betaibetaj"] :
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj(
                     task, cert.K, cert.n, cert.y0, num_contrainte
                 )
-                #if verbose :
-                print("Nombre de contraintes actuelles apres 12 : ", num_contrainte)
+                if verbose :
+                    print("Nombre de contraintes actuelles apres 12 : ", num_contrainte)
 
             # Contrainte 13 : Enveloppes de McCormick sur le produit zkj * sigmakj
             if coupes["sigmakzk"] : 
                 num_contrainte = contrainte_McCormick_zk_sigmak(
                     task, cert.K, cert.n, cert.U, num_contrainte
                 )
-                #if verbose : 
-                print("Nombre de contraintes actuelles apres 13 : ", num_contrainte)
+                if verbose : 
+                    print("Nombre de contraintes actuelles apres 13 : ", num_contrainte)
             
             if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, 
                                                 cert.epsilon, cert.L, cert.U, num_contrainte)
-                print("Nombre de contraintes apres RLT LAN : ", num_contrainte)
-            print("Nombre de contraintes : ", num_contrainte)
+                if verbose : 
+                    print("Nombre de contraintes apres RLT LAN : ", num_contrainte)
+            
+            # print("Nombre de contraintes : ", num_contrainte)
+            
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 
             # Write the problem for human inspection
 
             task.writedata("Models_MOSEK/ptf/Model_FprG.ptf")
+            imprime_ptf(cert,task,"FprG_SDP",titre,coupes)
 
             # Résoudre le problème
             start_time = time.time()

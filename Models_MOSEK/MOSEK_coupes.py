@@ -419,7 +419,6 @@ def contrainte_Mc_Cormick_betai_zkj(task : mosek.Task,
                     )
                     task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-U[k][j]], [0])
                     num_contrainte += 1
-    print("num contrainte à la fin : ", num_contrainte)
     return num_contrainte
 
 

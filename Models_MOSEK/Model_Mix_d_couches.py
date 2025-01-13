@@ -11,7 +11,8 @@ from MOSEK_objective import (
 from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_somme_beta_egale_1,
@@ -88,8 +89,11 @@ def solve_Mix_SDP_objbetas_couches(
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)) )
             if coupes["betaizkj"] :
                 numcon+= (2 * (cert.n[cert.K]-1) * sum(cert.n)) 
+            if coupes["bornes_betaz"] :
+                numcon += 1
 
-            print("numcon : ", numcon)
+            if verbose : 
+                print("numcon : ", numcon)
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
@@ -193,6 +197,9 @@ def solve_Mix_SDP_objbetas_couches(
 
             if coupes["betaizkj"]:
                 num_contrainte = contrainte_Mc_Cormick_betai_zkj(task, cert.K, cert.n, cert.y0, cert.U, num_contrainte, par_couches = True)
+
+            if coupes["bornes_betaz"]:
+                num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,sigmas = False, par_couches=True)
             
             #print("Nombre de contraintes après contrainte McCormick betai zkj", num_contrainte)
             if verbose : 
@@ -201,6 +208,7 @@ def solve_Mix_SDP_objbetas_couches(
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
             task.writedata("Models_MOSEK/ptf/Model_Mix_d_couches.ptf")
+            imprime_ptf(cert,task,"Mix_d_couches_SDP",titre,coupes)
 
             # Résoudre le problème
             start_time = time.time()
@@ -219,13 +227,14 @@ def solve_Mix_SDP_objbetas_couches(
             if solsta == solsta.optimal:
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z_0,"Mix_d_couches_SDP",titre,coupes,nom_variable="z_0")
+                if cert.data_modele != "MNIST" :
+                    affiche_matrice(cert,z_0,"Mix_d_couches_SDP",titre,coupes,nom_variable="z_0")
                 for i in range(1,cert.K-1):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
                     affiche_matrice(cert,z_i,"Mix_d_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
                 z_sol_derniere_couche = task.getbarxj(mosek.soltype.itr, cert.K-1)
-                print("taille calculee :: ", 1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1)
+                # print("taille calculee :: ", 1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1)
                 zbeta = reconstitue_matrice(1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1, z_sol_derniere_couche)
                 affiche_matrice(cert,zbeta,"Mix_d_couches_SDP",titre,coupes,nom_variable="zbeta_dernieres_couches")
 
@@ -239,7 +248,6 @@ def solve_Mix_SDP_objbetas_couches(
                 if verbose : 
                     print(f"Valeur du problème dual: {dual_obj_value}")
 
-                
                 for j in range(cert.n[0]):
                     Sol.append(z_sol[j + 1])
                 status = 1

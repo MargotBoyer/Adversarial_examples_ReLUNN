@@ -11,7 +11,9 @@ from MOSEK_objective import (
 from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
-    affiche_matrice
+    affiche_matrice,
+    save_matrice, 
+    imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_somme_beta_egale_1,
@@ -21,7 +23,7 @@ from MOSEK_contraintes_adversariales import(
     contrainte_borne_betas,
     contrainte_borne_betas_unis,
     contrainte_produit_betas_nuls_Adv2_Adv3,
-    contrainte_borne_somme_betaz
+    contrainte_borne_somme_betaz,
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_borne_couches_internes,
@@ -87,7 +89,10 @@ def solveMix_SDP_objbetas(
 
             if coupes["betaizkj"]:
                 numcon += (2 * (cert.n[cert.K]-1) * sum(cert.n))  # coupes betai * zkj
-            print("numcon : ", numcon)
+
+            if coupes["bornes_betaz"]:
+                numcon += 1
+            #print("numcon : ", numcon)
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
@@ -184,6 +189,10 @@ def solveMix_SDP_objbetas(
             if coupes["betaizkj"]:
                 num_contrainte = contrainte_Mc_Cormick_betai_zkj(task, cert.K, cert.n, cert.y0, cert.U, num_contrainte)
             
+            if coupes["bornes_betaz"]:
+                num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,par_couches=False)
+                                                            
+                                                            
             #print("Nombre de contraintes après contrainte McCormick betai zkj", num_contrainte)
             if verbose : 
                 print("Nombre final de contraintes : ", num_contrainte)
@@ -191,6 +200,7 @@ def solveMix_SDP_objbetas(
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
             task.writedata("Models_MOSEK/ptf/Model_Mix_d.ptf")
+            imprime_ptf(cert,task,"Mix_d_SDP",titre,coupes)
 
             # Résoudre le problème
             start_time = time.time()
@@ -207,11 +217,22 @@ def solveMix_SDP_objbetas(
             num_iterations = task.getintinf(mosek.iinfitem.intpnt_iter)
             print(f"Mix d status: {solsta}")
             if solsta == solsta.optimal:
-                print("On a trouve une solution optimale ! ")
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
-                z = reconstitue_matrice(sum(cert.n) + cert.n[cert.K], z_sol)
-                affiche_matrice(cert,z,"Mix_d_SDP",titre,coupes,nom_variable="zbeta")
 
+                z = reconstitue_matrice(sum(cert.n) + cert.n[cert.K], z_sol)
+
+                if cert.data_modele != "MNIST":
+                    affiche_matrice(cert,z,"Mix_d_SDP",titre,coupes,nom_variable="zbeta")
+                else :
+                    n_rows, ncols = z.shape
+                    mask_beta = np.zeros((n_rows), dtype = bool) 
+                    mask_beta[(cert.n[0]) :( sum(cert.n) + cert.n[cert.K]) - 1] = True
+                    mask_beta[0] = True
+                    print("T mask sans reshape shape : ", z[np.outer(mask_beta, mask_beta)].shape)
+                    T = z[np.outer(mask_beta, mask_beta)].reshape(sum(cert.n[1:]) + cert.n[cert.K], sum(cert.n[1:]) + cert.n[cert.K])
+                    print("T mask shape : ", T.shape)
+                    save_matrice(cert,T,
+                                 "Mix_d_SDP", titre, coupes, nom_variable = "zbeta_sans_input")
                 # print(
                 #     "z : ",
                 #     [

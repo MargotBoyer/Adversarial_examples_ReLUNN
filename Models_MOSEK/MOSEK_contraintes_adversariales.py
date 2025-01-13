@@ -27,7 +27,6 @@ def contrainte_exemple_adverse_beta_u(
         if j == ytrue:
             continue
         jbeta = return_good_j_beta(j, ytrue)
-        print(f"y0 : {ytrue},   j : {j},   jbeta : {jbeta}")
         if par_couches : 
             # Partie Beta
             A5_beta_k = [jbeta]
@@ -632,7 +631,7 @@ def contrainte_borne_somme_betaz(
                 [return_i_from_k_j__variable_z(K,j,n) for j in range(n[K]) if j!=ytrue],
                 [1/2] * (n[K] - 1),
             ) 
-    elif not par_couches and not sigmas :    
+    elif not par_couches and not sigmas : 
         task.putbarablocktriplet(
                 [num_contrainte] * (n[K] - 1),  
                 [0] * (n[K] - 1),  
@@ -641,7 +640,7 @@ def contrainte_borne_somme_betaz(
                 [1/2] * (n[K] - 1),
             )
     # Bornes
-    task.putconboundlist([num_contrainte], [mosek.boundkey.ra], [-inf], [max(U[K])])
+    task.putconboundlist([num_contrainte], [mosek.boundkey.up], [-inf], [max(U[K])])
     num_contrainte += 1
     return num_contrainte
 

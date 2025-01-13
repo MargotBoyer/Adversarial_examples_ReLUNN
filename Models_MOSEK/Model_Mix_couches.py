@@ -10,12 +10,14 @@ from MOSEK_objective import (
 )
 from MOSEK_outils import(
     reconstitue_matrice,
-    affiche_matrice
+    affiche_matrice,
+    imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
     contrainte_exemple_adverse_somme_beta_superieure_1,
     contrainte_beta_discret,
+    contrainte_borne_somme_betaz
 )
 from MOSEK_contraintes_passage_couches import (
     contrainte_borne_couches_internes,
@@ -76,6 +78,7 @@ def solveMix_SDP_par_couches(
             if coupes["RLTLan"]:
                 numcon += (3 * sum(cert.n[k]*cert.n[k+1] for k in range(cert.K)) + sum(cert.n[1:cert.K]) 
                            + 2 * sum((cert.n[k])*(cert.n[k]-1)//2 for k in range(1,cert.K)))
+
 
             # Ajoute 'numcon' contraintes vides.
             # Les contraintes n'ont pas de bornes initialement.
@@ -139,19 +142,22 @@ def solveMix_SDP_par_couches(
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte, 
                                                           par_couches = True, neurones_actifs_stables=cert.neurones_actifs_stables,
                                                           neurones_inactifs_stables=cert.neurones_inactifs_stables)
-                print("num contrainte apres zk^2 : ", num_contrainte)
+                
             if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj(task,cert.K, cert.n, cert.y0, num_contrainte, par_couches = True)
             if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U,num_contrainte, par_couches = True)
-                print("num contrainte apres RLT Lan : ", num_contrainte)
-            print("Nombre de contraintes : ", num_contrainte)
+
+                #print("num contrainte apres RLT Lan : ", num_contrainte)
+            #print("Nombre de contraintes : ", num_contrainte)
+            
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 
             # Write the problem for human inspection
             task.writedata("Models_MOSEK/ptf/Model_Mix_couches.ptf")
+            imprime_ptf(cert,task,"Mix_couches_SDP",titre,coupes)
 
             # Résoudre le problème
             start_time = time.time()
@@ -174,7 +180,8 @@ def solveMix_SDP_par_couches(
                 beta_sol = task.getbarxj(mosek.soltype.itr, cert.K)
 
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
-                affiche_matrice(cert,z_0,"Mix_couches_SDP",titre,coupes,nom_variable="z_0")
+                if cert.data_modele != "MNIST" :   
+                    affiche_matrice(cert,z_0,"Mix_couches_SDP",titre,coupes,nom_variable="z_0")
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
