@@ -13,6 +13,7 @@ from MOSEK_outils import(
     adapte_parametres_mosek,
     affiche_matrice,
     save_matrice,
+    tableau_matrice_csv,
     imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
@@ -186,6 +187,7 @@ def solveMix_SDP(
 
                 if cert.data_modele != "MNIST":
                     affiche_matrice(cert,z,"Mix_SDP",titre,coupes,nom_variable="z")
+                    tableau_matrice_csv(cert,z,"Mix_SDP",titre,coupes,nom_variable="z")
                 else :
                     n_rows, ncols = z.shape
                     mask_beta = np.ones((n_rows), dtype = bool) 
@@ -194,8 +196,11 @@ def solveMix_SDP(
                     print("T mask shape : ", T.shape)
                     save_matrice(cert,T,
                                  "Mix_SDP", titre, coupes, nom_variable = "z_sans_input")
+                    tableau_matrice_csv(cert,T,
+                                 "Mix_SDP", titre, coupes, nom_variable = "z_sans_input")
                 
                 affiche_matrice(cert,beta,"Mix_SDP",titre,coupes,nom_variable="beta")
+                tableau_matrice_csv(cert,beta,"Mix_SDP",titre,coupes,nom_variable="beta")
 
                 if verbose:
                     print(

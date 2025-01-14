@@ -13,7 +13,8 @@ from MOSEK_outils import(
     adapte_parametres_mosek,
     affiche_matrice,
     save_matrice,
-    imprime_ptf
+    imprime_ptf,
+    tableau_matrice_csv
 )
 from MOSEK_contraintes_adversariales import(
     contrainte_exemple_adverse_beta_u,
@@ -156,6 +157,7 @@ def solve_Lan(
                 z = reconstitue_matrice(sum(cert.n) + 1, z_sol)
                 if cert.data_modele != "MNIST":
                     affiche_matrice(cert,z,"Lan_SDP",titre, coupes,ycible=ycible)
+                    tableau_matrice_csv(cert,z,"Lan_SDP",titre, coupes,ycible=ycible)
                 else :
                     n_rows, ncols = z.shape
                     mask_beta = np.ones((n_rows), dtype = bool) 
@@ -164,7 +166,8 @@ def solve_Lan(
                     print("T mask shape : ", T.shape)
                     save_matrice(cert,T,
                                  "Lan_SDP", titre, coupes, nom_variable = "z_sans_input")
-                
+                    tableau_matrice_csv(cert,T,
+                                    "Lan_SDP", titre, coupes, nom_variable = "z_sans_input")
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

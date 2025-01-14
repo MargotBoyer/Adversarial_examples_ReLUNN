@@ -3,6 +3,7 @@ import mosek
 import matplotlib.pyplot as plt
 import os
 import time
+import pandas as pd
 
 
 def return_k_j_from_i(i,n):
@@ -146,6 +147,31 @@ def save_matrice(cert, T, model, titre, coupes, ycible = None, nom_variable = ""
         plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
     elif coupes_str != "" and ycible is None: 
         plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
+    plt.close()
+
+
+
+
+def tableau_matrice_csv(cert, T, model, titre, coupes, ycible = None, nom_variable = ""):
+    print("Tableau matrice !")
+    coupes_str = "_".join(key for key, value in coupes.items() if value)
+    coupes_str = coupes_str.replace('^','')
+
+    model_dir = f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
+   
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
+    matrice_resultats = pd.DataFrame( np.round(T, decimals = 2) )
+    
+    if coupes_str == "" and ycible is not None:
+        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}.csv", index = False)
+    elif coupes_str == "" and ycible is None:
+        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}.csv", index = False)
+    elif coupes_str != "" and ycible is not None:
+        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}_coupes={coupes_str}.csv", index = False)
+    elif coupes_str != "" and ycible is None: 
+        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}.csv", index = False)
     plt.close()
 
 

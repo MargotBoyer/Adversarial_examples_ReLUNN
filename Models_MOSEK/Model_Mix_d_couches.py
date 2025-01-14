@@ -12,6 +12,7 @@ from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
     affiche_matrice,
+    tableau_matrice_csv,
     imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
@@ -229,14 +230,17 @@ def solve_Mix_SDP_objbetas_couches(
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
                 if cert.data_modele != "MNIST" :
                     affiche_matrice(cert,z_0,"Mix_d_couches_SDP",titre,coupes,nom_variable="z_0")
+                    tableau_matrice_csv(cert,z_0,"Mix_d_couches_SDP",titre,coupes,nom_variable="z_0")
                 for i in range(1,cert.K-1):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
                     affiche_matrice(cert,z_i,"Mix_d_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
+                    tableau_matrice_csv(cert,z_0,"Mix_d_couches_SDP",titre,coupes,nom_variable="z_0")
                 z_sol_derniere_couche = task.getbarxj(mosek.soltype.itr, cert.K-1)
                 # print("taille calculee :: ", 1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1)
                 zbeta = reconstitue_matrice(1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1, z_sol_derniere_couche)
                 affiche_matrice(cert,zbeta,"Mix_d_couches_SDP",titre,coupes,nom_variable="zbeta_dernieres_couches")
+                tableau_matrice_csv(cert,zbeta,"Mix_d_couches_SDP",titre,coupes,nom_variable="zbeta_dernieres_couches")
 
                 # Obtenir la valeur du problème primal
                 primal_obj_value = task.getprimalobj(mosek.soltype.itr)

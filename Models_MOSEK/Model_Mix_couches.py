@@ -11,6 +11,7 @@ from MOSEK_objective import (
 from MOSEK_outils import(
     reconstitue_matrice,
     affiche_matrice,
+    tableau_matrice_csv,
     imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
@@ -182,13 +183,16 @@ def solveMix_SDP_par_couches(
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
                 if cert.data_modele != "MNIST" :   
                     affiche_matrice(cert,z_0,"Mix_couches_SDP",titre,coupes,nom_variable="z_0")
+                    tableau_matrice_csv(cert,z_0,"Mix_couches_SDP",titre,coupes,nom_variable="z_0")
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
                     affiche_matrice(cert,z_i,"Mix_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
+                    tableau_matrice_csv(cert,z_i,"Mix_couches_SDP",titre,coupes,nom_variable=f"z_{i}")
 
                 beta = reconstitue_matrice(cert.n[cert.K], beta_sol)
                 affiche_matrice(cert,beta,"Mix_couches_SDP",titre,coupes,nom_variable="beta")
+                tableau_matrice_csv(cert,beta,"Mix_couches_SDP",titre,coupes,nom_variable="beta")
 
                 if verbose : 
                     print("z : ", z_0)

@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, Subset
 
 import time
+import datetime
 import random
 import abc
 import os
@@ -52,7 +53,7 @@ class Certification_Problem(abc.ABC):
         self.architecture = architecture
         self.resultats = []
 
-        self.nom = f"{self.data_modele}_epsilon={self.epsilon}_taille={len(self.data)}"
+        self.nom = f"{self.data_modele}_epsilon={self.epsilon}_taille={len(self.data)}_" + "{:%d_%b_%y_%Hh_%M}".format(datetime.datetime.now())
         self.create_folder_benchmark_()
 
     @property
@@ -129,12 +130,12 @@ class Certification_Problem(abc.ABC):
                                 "epsilon_adv" : 0.01,
                                 "verbose" : verbose})
         
-        # optimizations_models_tester = ["Fischetti_Obj_diff", "Lan_quad", "Mix_diff_obj_quad", 
-        #                                "Mix_SDP","Mix_couches_SDP","Mix_d_SDP",
-        #                                "FprG_SDP","Mix_d_couches_SDP","Lan_SDP",
-        #                                "Lan_couches_SDP"]
+        optimizations_models_tester = ["Fischetti_Obj_diff", "Lan_quad", "Mix_diff_obj_quad", 
+                                       "Mix_SDP","Mix_couches_SDP","Mix_d_SDP",
+                                       "FprG_SDP","Mix_d_couches_SDP","Lan_SDP",
+                                       "Lan_couches_SDP"]
 
-        optimizations_models_tester =["Mix_d_SDP","Lan_SDP"]
+        #optimizations_models_tester =["Mix_d_SDP","Lan_SDP"]
         
         print("n : ", self.n)
         time.sleep(2)
@@ -294,11 +295,11 @@ class Certification_Problem(abc.ABC):
 
 if __name__ == "__main__":
 
-    data_modele = "MNIST"
+    data_modele = "BLOB"
     remove_folder_benchmark(data_modele)
 
-    architecture = "2x20"
-    epsilon = 0.1
+    architecture = None
+    epsilon = 5
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
     Certification_Problem_.apply()

@@ -12,6 +12,7 @@ from MOSEK_outils import(
     reconstitue_matrice,
     adapte_parametres_mosek,
     affiche_matrice,
+    tableau_matrice_csv,
     imprime_ptf
 )
 from MOSEK_contraintes_adversariales import(
@@ -163,13 +164,15 @@ def solve_Lan_couches(
 
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
                 if cert.data_modele != "MNIST" :
-                    affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,coupes,nom_variable=f"z_{0}")
+                    affiche_matrice(cert,z_0,"Lan_couches_SDP",titre,coupes,ycible=ycible,nom_variable=f"z_{0}")
+                    tableau_matrice_csv(cert,z_0,"Lan_couches_SDP",titre,coupes,ycible=ycible,nom_variable=f"z_{0}")
                 # Assuming the optimization succeeded read solution
                 for i in range(1,cert.K):
                     z_sol_i = task.getbarxj(mosek.soltype.itr, i)
                     z_i = reconstitue_matrice(1 + cert.n[i] + cert.n[i+1], z_sol_i)
                     #print("Matrice z_i : ", z_i)
                     affiche_matrice(cert,z_i,"Lan_couches_SDP",titre,coupes,ycible=ycible,nom_variable=f"z_{i}")
+                    tableau_matrice_csv(cert,z_i,"Lan_couches_SDP",titre,coupes,ycible=ycible,nom_variable=f"z_{i}")
 
 
                 # Obtenir la valeur du problème primal
