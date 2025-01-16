@@ -8,10 +8,15 @@ def contrainte_recurrence_matrices_couches(
         task : mosek.Task,
         K : int,
         n : List[int],
-        num_contrainte : int):
+        num_contrainte : int,
+        derniere_couche_lineaire : bool = True):
     # Contrainte  : Pk[zk+1] == Pk+1[zk+1] ***********************
-    # ***** Nombre de contraintes : sum(n[1:K]) *****************
-    for k in range(1,K):
+    # ***** Nombre de contraintes : sum(n[1:K]) ******************
+    if derniere_couche_lineaire :
+        max_K = K
+    else : 
+        max_K = K-1
+    for k in range(1,max_K):
         for j in range(n[k]):
             task.putbarablocktriplet(
                     [num_contrainte, num_contrainte],  

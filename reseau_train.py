@@ -150,8 +150,8 @@ def plot_weights(model):
 
 def architectures_modele(modele, architecture = None):
     if modele == "MOON" :
-        n = [2, 10, 10, 2]
-        K = 3
+        n = [2, 5, 5, 5, 2]
+        K = 4
     elif modele == "BLOB" :
         n = [2, 2, 3]
         K = 2

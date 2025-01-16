@@ -130,15 +130,20 @@ class Certification_Problem(abc.ABC):
                                 "epsilon_adv" : 0.01,
                                 "verbose" : verbose})
         
-        optimizations_models_tester = ["Fischetti_Obj_diff", "Lan_quad", "Mix_diff_obj_quad", 
-                                       "Mix_SDP","Mix_couches_SDP","Mix_d_SDP",
-                                       "FprG_SDP","Mix_d_couches_SDP","Lan_SDP",
-                                       "Lan_couches_SDP"]
+        # optimizations_models_tester = ["Fischetti_Obj_diff", "Lan_quad", "Mix_diff_obj_quad", 
+        #                                "Mix_SDP","Mix_couches_SDP","Mix_d_SDP",
+        #                                "FprG_SDP","Mix_d_couches_SDP","Lan_SDP",
+        #                                "Lan_couches_SDP"]
 
-        #optimizations_models_tester =["Mix_d_SDP","Lan_SDP"]
+        optimizations_models_tester =["Mix_d_SDP","Lan_SDP"]
         
         print("n : ", self.n)
-        time.sleep(2)
+        for i in range(len(self.W)):
+            print(f"\n \n \n Couche {i}")
+            for j in range(len(self.W[i])):
+                print("W : ", [round(self.W[i][j][k]) for k in range(len(self.W[i][j]))])
+            print("b : ", [round(self.b[i][j]) for j in range(len(self.b[i]))])
+        
         for ind_x0 in range(len(self.data)):
             x0, y0 = self.data[ind_x0]
             x0 = x0.view(-1)
@@ -148,6 +153,17 @@ class Certification_Problem(abc.ABC):
                                               x0, y0.item(), ind_x0, self.epsilon)
             #cert.IBP()
             cert.calcule_bornes_all_algorithms(verbose = verbose, FULL = False)
+            print("U : ", cert.U)
+            print("L : ", cert.L)
+            print("neurones_actifs_stables : ", cert.neurones_actifs_stables)
+            print("neurones_inactifs_stables : ", cert.neurones_inactifs_stables)
+            for k in range(self.K):
+                for j in range(self.n[k]):
+                    if (k,j) not in cert.neurones_actifs_stables + cert.neurones_inactifs_stables:
+                        print(f"Neurone ({k},{j}) : "
+                                f"U = {cert.U[k][j]} et L = {cert.L[k][j]}")    
+            time.sleep(2000)
+            time.sleep(200)
             for optimization_model in optimizations_models_tester: 
                 model_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}\{optimization_model}"
                 if (not os.path.exists(model_dir)) and (optimization_model in optimization_models_mosek):
@@ -162,12 +178,12 @@ class Certification_Problem(abc.ABC):
     
     def test(self):        
         coupes_liste = [
-                  {"RLTLan" : False, 
-                  "zk2" : False,
+                  {"RLTLan" : True, 
+                  "zk2" : True,
                   "betaibetaj" : False,
                   "sigmakzk" : False,
                   "betaizkj" : False,
-                  "bornes_betaz" : True}
+                  "bornes_betaz" : False}
                   ]
         parametres_reseau = {"K" : self.K,
                     "n" : self.n,
@@ -183,7 +199,7 @@ class Certification_Problem(abc.ABC):
         
         print("n ", self.n)
         #optimizations_models_tester  = ["Lan_SDP", "Lan_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP", "Mix_SDP", "Mix_couches_SDP", "FprG_SDP"]
-        optimizations_models_tester  = ["Mix_d_SDP", "Mix_d_couches_SDP"]
+        optimizations_models_tester  = ["Lan_couches_SDP"]
 
         for ind_x0 in range(len(self.data)):
             x0, y0 = self.data[ind_x0]
@@ -194,7 +210,8 @@ class Certification_Problem(abc.ABC):
             #time.sleep(2)
             cert = Certification_Problem_Data(self.data_modele, self.architecture, 
                                               x0, y0.item(), ind_x0, self.epsilon)
-            cert.calcule_bornes_all_algorithms()
+            #cert.calcule_bornes_all_algorithms()
+            cert.IBP()
             print("U : ", cert.U)
             print("L : ", cert.L)
 
@@ -211,9 +228,16 @@ class Certification_Problem(abc.ABC):
                 if (not os.path.exists(model_dir)) and (optimization_model in optimization_models_mosek):
                     print(f"Création du dossier : {model_dir}")
                     os.makedirs(model_dir)
-                for coupes in coupes_liste:
-                    print("Coupes : ", coupes)
-                    Sol, opt, status, execution_time, dic_infos = cert.solve(optimization_model, self.nom, coupes = coupes)
+
+                print("\n AVEC la derniere couche dans la matrice variable :",)
+                Sol, opt, status, execution_time, dic_infos = cert.solve(optimization_model, self.nom, coupes = coupes_liste[0], derniere_couche_lineaire=True, verbose = False)
+                print("Opt : ", opt)
+                print("\n SANS la derniere couche dans la matrice variable :",)
+                Sol, opt, status, execution_time, dic_infos = cert.solve(optimization_model, self.nom, coupes = coupes_liste[0], derniere_couche_lineaire=False, verbose = False)
+                print("Opt : ", opt)
+                # for coupes in coupes_liste:
+                #     print("Coupes : ", coupes)
+                #     Sol, opt, status, execution_time, dic_infos = cert.solve(optimization_model, self.nom, coupes = coupes)
                     # cert.update_resultats(optimization_model, parametres_optimisation, 
                     #                       parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
@@ -295,14 +319,14 @@ class Certification_Problem(abc.ABC):
 
 if __name__ == "__main__":
 
-    data_modele = "BLOB"
+    data_modele = "MNIST"
     remove_folder_benchmark(data_modele)
 
-    architecture = None
+    architecture = "2x20"
     epsilon = 5
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
-    Certification_Problem_.apply()
+    Certification_Problem_.test()
     
     # x0, y0 = Certification_Problem_MNIST.data[0][0][0], Certification_Problem_MNIST.data[0][0][1]
     # print("x0 : ", x0)

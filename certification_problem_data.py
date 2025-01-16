@@ -370,11 +370,11 @@ class Certification_Problem_Data:
             # coupes_noms = ["RLTLan", "zk2", "betaibetaj","sigmakzk"]
             coupes_noms = ["betaibetaj"]
         elif optimization_model in ["Lan_SDP","Lan_couches_SDP"]:
-            coupes_noms = ["zk2","bornes_betaz"]
-            #coupes_noms = ["zk^2"]
+            coupes_noms = ["zk2","RLT_Lan", "bornes_betaz"]
+            coupes_noms = ["zk^2"]
         elif optimization_model in ["Mix_SDP", "Mix_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP"]:
             # coupes_noms = ["RLTLan", "zk2", "betaibetaj","betaizkj"]
-            coupes_noms = ["betaibetaj","bornes_betaz"]
+            coupes_noms = ["betaibetaj"]
 
         dict_coupes_false = {coupe : False for coupe in coupes_totales if coupe not in coupes_noms}
         coupes_combinaisons_model = list(itertools.product([True, False], repeat=len(coupes_noms)))
@@ -413,7 +413,7 @@ class Certification_Problem_Data:
     
 
     # optimization_models_mosek = [ "Mix_SDP","Mix_couches_SDP","Mix_d_SDP","FprG_SDP","Mix_d_couches_SDP","Lan_SDP","Lan_couches_SDP"]
-    def solve(self, optimization_model: str, titre, coupes = None, relax = None, ycible = None, verbose = False):
+    def solve(self, optimization_model: str, titre, coupes = None, relax = None, ycible = None, derniere_couche_lineaire = True, verbose = False):
 
         if optimization_model == "Fischetti_Obj_diff":
             return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre,verbose)
@@ -440,11 +440,11 @@ class Certification_Problem_Data:
         elif optimization_model == "Lan_SDP":
             if ycible is None:
                 ycible = cherche_ycible(self.y0, self.n[self.K])
-            return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, verbose)
+            return MOSEK_Lan.solve_Lan(self,coupes,ycible,titre, derniere_couche_lineaire, verbose)
         elif optimization_model == "Lan_couches_SDP":
             if ycible is None :
                 ycible = cherche_ycible(self.y0, self.n[self.K])
-            return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre, verbose)
+            return MOSEK_Lan_couches.solve_Lan_couches(self,coupes,ycible,titre,derniere_couche_lineaire=derniere_couche_lineaire, verbose=verbose)
         else :
             print("Modèle non reconnu")
         
