@@ -205,7 +205,7 @@ def solveFprG_SDP(
 
             # Write the problem for human inspection
 
-            task.writedata("Models_MOSEK/ptf/Model_FprG.ptf")
+            task.writedata(os.path.join(os.getcwd(), "Models_MOSEK/ptf/Model_FprG.ptf"))
             imprime_ptf(cert,task,"FprG_SDP",titre,coupes)
 
             # Résoudre le problème

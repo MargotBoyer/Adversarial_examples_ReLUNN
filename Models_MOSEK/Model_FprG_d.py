@@ -205,7 +205,7 @@ def solveFprG_SDP_Adv2(
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 
-            task.writedata("Models_MOSEK/ptf/Model_FprG_d.ptf")
+            task.writedata(os.path.join(os.getcwd(), "Models_MOSEK/ptf/Model_FprG_d.ptf"))
             imprime_ptf(cert,task,"FprG_d_SDP",titre,coupes)
 
             # Résoudre le problème

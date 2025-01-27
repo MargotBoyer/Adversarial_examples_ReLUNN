@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader, Subset
 import itertools
 
 from load import load_data, load_file_weights, retourne_weights, cherche_ycible, liste_ycible
-from reseau_train import Reseau, architectures_modele
+from reseau_train import Reseau, architectures_modele, device
 
 from calcule_bornes_reseau import (
     solve_borne_inf_L,
@@ -68,7 +68,7 @@ class Certification_Problem_Data:
         file = load_file_weights(data_modele, architecture)
         W, b = retourne_weights(K, n, file)
         self.n, self.K, self.W, self.b = n, K, W, b
-        self.Res = Reseau.create_with_file(data_modele, architecture)
+        self.Res = Reseau.create_with_file(data_modele, architecture).to(device)
         self.epsilon = epsilon
         self.L = None
         self.U = None
@@ -219,9 +219,9 @@ class Certification_Problem_Data:
                 weight_layer = layer.weight.detach().clone()  # Récupère les poids
                  # Change L_layer pour le dupliquer pour chaque neurone
                 print("ind : ", idx)
-                L_previous_layer = torch.tensor(L[idx//2]).view(-1, 1).repeat(1, layer.out_features)   
+                L_previous_layer = torch.tensor(L[idx//2]).view(-1, 1).repeat(1, layer.out_features).to(device)   
                 
-                U_previous_layer = torch.tensor(U[idx//2]).view(-1, 1).repeat(1, layer.out_features)   
+                U_previous_layer = torch.tensor(U[idx//2]).view(-1, 1).repeat(1, layer.out_features).to(device)   
                 # print(f"Shape L_previous_layer : {L_previous_layer.shape}")
                 # print(f"Shape U_previous_layer : {U_previous_layer.shape}")
                 print(f"Previous layer borne inf L : {L_previous_layer}")
@@ -343,7 +343,8 @@ class Certification_Problem_Data:
         return L_x0, U_x0, neurones_actifs_stables, neurones_inactifs_stables
     
 
-    def apply(self, optimization_model: str, parametres_reseau, parametres_optimisation, titre, verbose : bool = False):
+    def apply(self, optimization_model: str, parametres_reseau, parametres_optimisation, titre, 
+              derniere_couche_lineaire : bool = True, coupes = None, verbose : bool = False):
         parametres_reseau["L"] = self.L
         parametres_reseau["U"] = self.U
         if optimization_model in optimization_models_gurobi:
@@ -351,30 +352,37 @@ class Certification_Problem_Data:
                 optimization_model, parametres_optimisation, parametres_reseau, titre, verbose = verbose)
         elif optimization_model in optimization_models_mosek:
             self.apply_mosek(
-                optimization_model, parametres_optimisation, parametres_reseau, titre, verbose = verbose)
-        print("Resultats dans apply : ", self.resultats)
+                optimization_model, parametres_optimisation, parametres_reseau, titre, coupes = coupes, verbose = verbose)
+        #print("Resultats dans apply : ", self.resultats)
         self.optimization_models.append(optimization_model)
 
 
-    def apply_all_ycible(self, optimization_model: str, parametres_reseau, parametres_optimisation, titre, coupe = None, relax = None, verbose : bool = False):
+    def apply_all_ycible(self, optimization_model: str, parametres_reseau, parametres_optimisation, titre, 
+                         derniere_couche_lineaire : bool = True, coupe = None, relax = None, verbose : bool = False):
         for ycible in liste_ycible(self.y0, self.n[self.K]):
             Sol, opt, status, execution_time, dic_infos = self.solve(optimization_model, titre, coupes = coupe, relax = relax, ycible = ycible, verbose = verbose)
             self.update_resultats(optimization_model, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos)
 
 
-    def apply_mosek(self, optimization_model: str, parametres_optimisation, parametres_reseau, titre, verbose : bool = False):
+    def apply_mosek(self, optimization_model: str, parametres_optimisation, parametres_reseau, titre, 
+                    derniere_couche_lineaire : bool = True, coupes = None, verbose : bool = False):
         ycible = cherche_ycible(self.y0, self.n[self.K])
 
         coupes_totales = ["RLTLan", "zk2", "betaibetaj","sigmakzk","betaizkj","bornes_betaz"]
-        if optimization_model in ["FprG_SDP","FprG_d_SDP"]:
+        if coupes is not None : 
+            coupes_noms = coupes
+        elif optimization_model in ["FprG_SDP","FprG_d_SDP"]:
             # coupes_noms = ["RLTLan", "zk2", "betaibetaj","sigmakzk"]
-            coupes_noms = ["betaibetaj"]
+            coupes_noms = [coupe for coupe in coupes if coupe in ["RLTLan", "zk2", "betaibetaj","sigmakzk"]]
+
         elif optimization_model in ["Lan_SDP","Lan_couches_SDP"]:
-            coupes_noms = ["zk2","RLT_Lan", "bornes_betaz"]
-            coupes_noms = ["zk^2"]
+            #coupes_noms = ["zk2","RLT_Lan", "bornes_betaz"]
+            coupes_noms = [coupe for coupe in coupes if coupe in ["zk2","RLT_Lan", "bornes_betaz"]]
+
         elif optimization_model in ["Mix_SDP", "Mix_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP"]:
-            # coupes_noms = ["RLTLan", "zk2", "betaibetaj","betaizkj"]
-            coupes_noms = ["betaibetaj"]
+            #coupes_noms = ["RLTLan", "zk2", "betaibetaj","betaizkj"]
+            coupes_noms = [coupe for coupe in coupes if coupe in ["RLTLan", "zk2", "betaibetaj","betaizkj"]]
+
 
         dict_coupes_false = {coupe : False for coupe in coupes_totales if coupe not in coupes_noms}
         coupes_combinaisons_model = list(itertools.product([True, False], repeat=len(coupes_noms)))
@@ -414,7 +422,8 @@ class Certification_Problem_Data:
 
     # optimization_models_mosek = [ "Mix_SDP","Mix_couches_SDP","Mix_d_SDP","FprG_SDP","Mix_d_couches_SDP","Lan_SDP","Lan_couches_SDP"]
     def solve(self, optimization_model: str, titre, coupes = None, relax = None, ycible = None, derniere_couche_lineaire = True, verbose = False):
-
+        if coupes is not None :
+            print("Coupes : ", coupes)
         if optimization_model == "Fischetti_Obj_diff":
             return GUROBI_Fischetti_diff.solveFischetti_Objdiff(self,relax,titre,verbose)
         elif optimization_model == "FprG_quad":
@@ -453,8 +462,9 @@ class Certification_Problem_Data:
     def update_resultats(self, optimization_model: str, parametres_optimisation, parametres_reseau, ycible, Sol, opt, status, execution_time, dic_infos):
         label = -1
         print("On update le resultat")
+        print("Le reseau est bien sur cuda : ", next(self.Res.parameters()).is_cuda)
         if Sol != []:
-            label = self.Res.retourne_label(Sol)
+            label = self.Res.retourne_label(torch.tensor(Sol).to(device))
             self.resultats.append({
             'modele_data': self.data_modele,
             'x0': self.x0,
@@ -470,7 +480,7 @@ class Certification_Problem_Data:
             'temps_execution': execution_time
         } | parametres_optimisation["coupes"] | dic_infos)
             
-        print("Resultats : ", self.resultats)
+        #print("Resultats : ", self.resultats)
      
         if Sol != []:
             if self.data_modele == "MNIST":

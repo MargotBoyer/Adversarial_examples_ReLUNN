@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from load import load_file_weights, retourne_weights
 
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"Using {device} device")
 
@@ -194,13 +195,13 @@ def architectures_modele(modele, architecture = None):
 
 
 if __name__ == "__main__":
-    modele = "MOON"
-    architecture = None
+    modele = "MNIST"
+    architecture = "2x20"
 
     if modele == "MOON" :
         data = torch.load('datasets/MOON/MOON_dataset.pt')
     elif modele == "BLOB" :
-        data = torch.load('datasets/BLOB/BLOB_dataset.pt')
+        data = torch.load('datasets/BLOB/BLOB_noise=0.15__dataset.pt')
     elif modele == "MULTIPLE_BLOB" :
         data = torch.load('datasets/MULTIPLE_BLOB/MULTIPLE_BLOB_dataset.pt')
     elif modele == "CIRCLE" :
@@ -220,7 +221,7 @@ if __name__ == "__main__":
     print("Data loaded!\n", data[0])
     print("n : ", n)
     
-    Res = Reseau(K, n)
+    Res = Reseau(K, n).to(device)
     #summary_model(Res)
 
     batch_size = 500

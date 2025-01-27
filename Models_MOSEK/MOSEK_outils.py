@@ -118,7 +118,9 @@ def save_matrice(cert, T, model, titre, coupes, ycible = None, nom_variable = ""
     coupes_str = coupes_str.replace('^','')
     #print("Coupes str : ", coupes_str)
 
-    model_dir = f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
+    model_dir = os.path.join(os.getcwd(),f"datasets/{cert.data_modele}/Benchmark/{titre}/{model}")
+    print("Model dir save matrice: ", model_dir)
+   
    
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -140,13 +142,13 @@ def save_matrice(cert, T, model, titre, coupes, ycible = None, nom_variable = ""
     
     print("Save")
     if coupes_str == "" and ycible is not None:
-        plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}", bbox_inches='tight', dpi=300)
+        plt.savefig(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}", bbox_inches='tight', dpi=300)
     elif coupes_str == "" and ycible is None:
-        plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}", bbox_inches='tight', dpi=300)
+        plt.savefig(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}", bbox_inches='tight', dpi=300)
     elif coupes_str != "" and ycible is not None:
-        plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
+        plt.savefig(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
     elif coupes_str != "" and ycible is None: 
-        plt.savefig(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
+        plt.savefig(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}", bbox_inches='tight', dpi=300)
     plt.close()
 
 
@@ -157,7 +159,8 @@ def tableau_matrice_csv(cert, T, model, titre, coupes, ycible = None, nom_variab
     coupes_str = "_".join(key for key, value in coupes.items() if value)
     coupes_str = coupes_str.replace('^','')
 
-    model_dir = f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
+    model_dir = os.path.join(os.getcwd(),f"datasets/{cert.data_modele}/Benchmark/{titre}/{model}")
+    print("Model dir tableau matrice csv : ", model_dir)
    
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -165,13 +168,13 @@ def tableau_matrice_csv(cert, T, model, titre, coupes, ycible = None, nom_variab
     matrice_resultats = pd.DataFrame( np.round(T, decimals = 2) )
     
     if coupes_str == "" and ycible is not None:
-        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}.csv", index = False)
+        matrice_resultats.to_csv(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}.csv", index = False)
     elif coupes_str == "" and ycible is None:
-        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}.csv", index = False)
+        matrice_resultats.to_csv(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}.csv", index = False)
     elif coupes_str != "" and ycible is not None:
-        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}_coupes={coupes_str}.csv", index = False)
+        matrice_resultats.to_csv(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_{nom_variable}_coupes={coupes_str}.csv", index = False)
     elif coupes_str != "" and ycible is None: 
-        matrice_resultats.to_csv(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}.csv", index = False)
+        matrice_resultats.to_csv(f"{model_dir}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_{nom_variable}_coupes={coupes_str}.csv", index = False)
     plt.close()
 
 
@@ -188,8 +191,11 @@ def imprime_ptf(cert, task, model, titre, coupes, ycible = None):
     coupes_str = coupes_str.replace('^','')
     #print("Coupes str : ", coupes_str)
 
-    model_dir = f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}"
-    model_dir_ptf = f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\ptf"
+    
+    model_dir = os.path.join(os.getcwd(),f"datasets/{cert.data_modele}/Benchmark/{titre}/{model}")
+    print("Model dir imprime ptf : ", model_dir)
+   
+    model_dir_ptf = f"{model_dir}/ptf"
    
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -198,13 +204,13 @@ def imprime_ptf(cert, task, model, titre, coupes, ycible = None):
         os.makedirs(model_dir_ptf)
     
     if coupes_str == "" and ycible is not None:
-        task.writedata(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\ptf\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}.ptf")
+        task.writedata(f"{model_dir_ptf}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}.ptf")
     elif coupes_str == "" and ycible is None:
-        task.writedata(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\ptf\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}.ptf")
+        task.writedata(f"{model_dir_ptf}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}.ptf")
     elif coupes_str != "" and ycible is not None:
-        task.writedata(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\ptf\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_coupes={coupes_str}.ptf")
+        task.writedata(f"{model_dir_ptf}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_ycible={ycible}_coupes={coupes_str}.ptf")
     elif coupes_str != "" and ycible is None: 
-        task.writedata(f"datasets\{cert.data_modele}\Benchmark\{titre}\{model}\ptf\Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_coupes={coupes_str}.ptf")
+        task.writedata(f"{model_dir_ptf}/Matrice_solution_MOSEK_{model}_x0_id={cert.x0_id}_coupes={coupes_str}.ptf")
     plt.close()
 
 

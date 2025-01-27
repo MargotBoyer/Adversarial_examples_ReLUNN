@@ -1,6 +1,6 @@
 # Modele from Fischetti article in which we adapt the objective to find an adversarial example for all class (not only a targeted class)
 
-import tupledict
+#import tupledict
 import gurobipy as gp
 from gurobipy import GRB
 import time

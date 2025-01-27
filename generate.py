@@ -116,7 +116,7 @@ def generate_X_y(name="MOON", n_samples=100, noise=0.05):
     return None, None
 
 
-def generate_toy(name="MOON", n_samples=100, noise=0.05, split=0.8, save=True):
+def generate_toy(name="BLOB", n_samples=1000, noise=0.05, split=0.8, save=True):
     X,y,annotations = generate_X_y(name,n_samples,noise)
 
     dataset = data.TensorDataset(X, y)  # create the datset
@@ -129,7 +129,7 @@ def generate_toy(name="MOON", n_samples=100, noise=0.05, split=0.8, save=True):
 
 
 def main():
-    generate_toy(name="MOON", n_samples=10000, noise=0.15)
+    generate_toy(name="BLOB", n_samples=10000, noise=0.15)
 
     # Si on veut lancer par ligne de commande  
     # python generate.py --name BLOB --n_samples 100 --noise 0.1

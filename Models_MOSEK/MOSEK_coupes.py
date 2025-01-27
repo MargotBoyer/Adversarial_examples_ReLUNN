@@ -501,11 +501,16 @@ def coupes_RLT_LAN(task : mosek.Task,
                    L : List[List[float]],
                    U  : List[List[float]],
                    num_contrainte : int, 
-                   par_couches : bool = False):
+                   par_couches : bool = False,
+                   derniere_couche_lineaire : bool = True) :
+                    
     # Contrainte 1 : P[xi xi+1] >= P[xi] * Li+1 + P[xi+1] * Li - Li+1 * Li
     # (12b dans l'article LAN2022)
     # ***** Nombre de contraintes : (3 * sum(n[k]*n[k+1] for k in range(K)) + sum(n[1:K])  + 2 * sum((n[k])*(n[k]-1)//2 for k in range(1,K))) *****************
-    for k in range(K):
+    max_K= K
+    if derniere_couche_lineaire:
+        max_K -=1
+    for k in range(max_K):
         for j1 in range(n[k]):
             for j2 in range(n[k+1]):
                 if k==0:
@@ -543,7 +548,7 @@ def coupes_RLT_LAN(task : mosek.Task,
 
     # Contrainte 2 : P[xi xi+1] <= P[xi] * Li+1 + P[xi+1] * Ui - Li+1 * Ui
     # (12c - première partie dans l'article LAN2022)
-    for k in range(K):
+    for k in range(max_K):
         for j1 in range(n[k]):
             for j2 in range(n[k+1]):
                 lb_j2 = L[k+1][j2]
@@ -576,7 +581,7 @@ def coupes_RLT_LAN(task : mosek.Task,
 
     # Contrainte 3 : P[xi xi+1] <= P[xi] * Ui+1 + P[xi+1] * Li - Li * Ui+1
     # (12c - deuxième partie article LAN2022)
-    for k in range(K):
+    for k in range(max_K):
         for j1 in range(n[k]):
             for j2 in range(n[k+1]):
                 
@@ -610,7 +615,7 @@ def coupes_RLT_LAN(task : mosek.Task,
 
     # Contrainte 4 : P[xi+1] <= Ai P[xi] + Bi  
     # (Contrainte triangulaire déjà présente dans le modèle de l'article LAN2022)
-    for k in range(1, K):
+    for k in range(1, max_K):
         for j in range(n[k]):
             # print(f"Neurone {j} couche {k} : U = {U[k][j]} et L = {L[k][j]}")
             ReLU_L_k_j = L[k][j] 
@@ -656,7 +661,7 @@ def coupes_RLT_LAN(task : mosek.Task,
 
     # Contrainte 5 : P[xi+1 xi+1] <= Ai P[xi xi+1] + Bi P[xi+1]
     # (14 - deuxième partie article LAN2022)
-    for k in range(1, K):
+    for k in range(1, max_K):
         for j in range(n[k]):
             for j0 in range(n[k]):
                 if j<=j0:
@@ -702,7 +707,7 @@ def coupes_RLT_LAN(task : mosek.Task,
 
     # Contrainte 6 : P[xi+1 xi+1] <= P[xi+1] Ui+1
     # (14 - première partie article LAN2022)
-    for k in range(1, K):
+    for k in range(1, max_K):
         for j in range(n[k]):
             for j0 in range(n[k]):
                 if j<=j0:

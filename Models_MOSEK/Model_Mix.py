@@ -53,6 +53,7 @@ def solveMix_SDP(
     cert,
     coupes: Dict[str, bool], 
     titre : str,
+    derniere_couche_lineaire : bool = True,
     verbose : bool =True
 ):
     with mosek.Env() as env:
@@ -158,7 +159,7 @@ def solveMix_SDP(
 
             # Write the problem for human inspection
 
-            task.writedata("Models_MOSEK/ptf/Model_Mix.ptf")
+            task.writedata(os.path.join(os.getcwd(), "Models_MOSEK/ptf/Model_Mix.ptf"))
             imprime_ptf(cert,task,"Mix_SDP",titre,coupes)
 
             # Résoudre le problème

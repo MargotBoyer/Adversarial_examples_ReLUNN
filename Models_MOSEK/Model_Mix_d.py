@@ -59,6 +59,7 @@ def solveMix_SDP_objbetas(
     cert,
     coupes: Dict[str, bool], 
     titre : str,
+    derniere_couche_lineaire : bool = True,
     verbose : bool =True
 ):
     def streamprinter(text):
@@ -200,7 +201,7 @@ def solveMix_SDP_objbetas(
 
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
-            task.writedata("Models_MOSEK/ptf/Model_Mix_d.ptf")
+            task.writedata(os.path.join(os.getcwd(),"Models_MOSEK/ptf/Model_Mix_d.ptf"))
             imprime_ptf(cert,task,"Mix_d_SDP",titre,coupes)
 
             # Résoudre le problème

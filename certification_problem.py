@@ -14,7 +14,7 @@ import pandas as pd
 import pickle
 # from reseau_train import Reseau, architectures_modele
 from load import load_data, load_file_weights, retourne_weights, cherche_ycible
-from reseau_train import Reseau, architectures_modele
+from reseau_train import Reseau, architectures_modele, device
 
 from typing import List, Dict
 
@@ -41,7 +41,7 @@ class Certification_Problem(abc.ABC):
         W, b = retourne_weights(K, n, file)
         self.n, self.K, self.W, self.b = n, K, W, b
         self.W_reverse = [[ [couche[i][j] for i in range(len(couche))] for j in range(len(couche[0]))] for couche in W]
-        self.Res = Reseau.create_with_file(data_modele, architecture)
+        self.Res = Reseau.create_with_file(data_modele, architecture).to(device)
 
         # Load donnees
         data = load_data(data_modele, architecture)
@@ -117,7 +117,7 @@ class Certification_Problem(abc.ABC):
         self._b = value
 
 
-    def apply(self, verbose : bool = False):
+    def apply(self, verbose : bool = False, coupes = None):
         parametres_reseau = {"K" : self.K,
                     "n" : self.n,
                     "W" : self.W,
@@ -135,7 +135,7 @@ class Certification_Problem(abc.ABC):
         #                                "FprG_SDP","Mix_d_couches_SDP","Lan_SDP",
         #                                "Lan_couches_SDP"]
 
-        optimizations_models_tester =["Mix_d_SDP","Lan_SDP"]
+        optimizations_models_tester =["Fischetti_Obj_diff", "Mix_d_SDP", "Mix_d_couches_SDP","Lan_SDP", "Lan_couches_SDP",  "Mix_SDP","Mix_couches_SDP"]
         
         print("n : ", self.n)
         for i in range(len(self.W)):
@@ -149,8 +149,10 @@ class Certification_Problem(abc.ABC):
             x0 = x0.view(-1)
             print(f"Shape x0 : {x0.shape}")
             print(f"Application pour x0 : {x0} et y0 : {y0}")
+            if isinstance(y0, torch.Tensor):
+                y0 = y0.item()
             cert = Certification_Problem_Data(self.data_modele, self.architecture, 
-                                              x0, y0.item(), ind_x0, self.epsilon)
+                                              x0, y0, ind_x0, self.epsilon)
             #cert.IBP()
             cert.calcule_bornes_all_algorithms(verbose = verbose, FULL = False)
             print("U : ", cert.U)
@@ -162,14 +164,13 @@ class Certification_Problem(abc.ABC):
                     if (k,j) not in cert.neurones_actifs_stables + cert.neurones_inactifs_stables:
                         print(f"Neurone ({k},{j}) : "
                                 f"U = {cert.U[k][j]} et L = {cert.L[k][j]}")    
-            time.sleep(2000)
-            time.sleep(200)
+           
             for optimization_model in optimizations_models_tester: 
-                model_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}\{optimization_model}"
+                model_dir = f"datasets/{self.data_modele}/Benchmark/{self.nom}/{optimization_model}"
                 if (not os.path.exists(model_dir)) and (optimization_model in optimization_models_mosek):
                     print(f"Création du dossier : {model_dir}")
                     os.makedirs(model_dir)
-                cert.apply(optimization_model, parametres_reseau, parametres_optimisation, titre = self.nom, verbose = verbose)
+                cert.apply(optimization_model, parametres_reseau, parametres_optimisation, titre = self.nom, coupes = coupes, verbose = verbose)
                 self.update_folder_benchmark_(parametres_reseau, parametres_optimisation, parametres_gurobi, cert, just_change_bench_csv = True, option = "")
                 #print(f"Resultats pour l'instant pour le probleme de certification sur la donnee numero {ind_x0} : ", cert.resultats)
             self.resultats.extend(cert.resultats)
@@ -208,8 +209,10 @@ class Certification_Problem(abc.ABC):
             print(f"Application pour x0 : {x0} et y0 : {y0}")
             ycible = cherche_ycible(y0, self.n[self.K])
             #time.sleep(2)
+            if isinstance(y0, torch.Tensor):
+                y0 = y0.item()
             cert = Certification_Problem_Data(self.data_modele, self.architecture, 
-                                              x0, y0.item(), ind_x0, self.epsilon)
+                                              x0, y0, ind_x0, self.epsilon)
             #cert.calcule_bornes_all_algorithms()
             cert.IBP()
             print("U : ", cert.U)
@@ -217,14 +220,14 @@ class Certification_Problem(abc.ABC):
 
             cert.solve("Fischetti_Obj_diff", self.nom, relax = False)
 
-            folder_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}"
+            folder_dir = f"datasets/{self.data_modele}/Benchmark/{self.nom}"
             if not os.path.exists(folder_dir):
                 print("Creation du dossier...")
                 os.makedirs(folder_dir)
 
 
             for optimization_model in optimizations_models_tester: 
-                model_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}\{optimization_model}"
+                model_dir = os.path.join(folder_dir, optimization_model)
                 if (not os.path.exists(model_dir)) and (optimization_model in optimization_models_mosek):
                     print(f"Création du dossier : {model_dir}")
                     os.makedirs(model_dir)
@@ -247,12 +250,12 @@ class Certification_Problem(abc.ABC):
     def create_folder_benchmark_(self,
         just_change_bench_csv : bool = False):
         """ Création du dossier de résultats """
-        folder_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}"
+        folder_dir = os.path.join(os.getcwd(), f"datasets/{self.data_modele}/Benchmark/{self.nom}")
         if not os.path.exists(folder_dir) and not just_change_bench_csv:
             print("Creation du dossier...")
             os.makedirs(folder_dir)
 
-        os.makedirs(folder_dir, exist_ok=True)
+        #os.makedirs(folder_dir, exist_ok=True)
 
 
     def update_folder_benchmark_(self,
@@ -265,7 +268,7 @@ class Certification_Problem(abc.ABC):
         """ Enregistre les résultats du run dans un dossier """
     
         # Création du chemin de dossier
-        folder_dir = f"datasets\{self.data_modele}\Benchmark\{self.nom}"
+        folder_dir = os.path.join(os.getcwd(), f"datasets/{self.data_modele}/Benchmark/{self.nom}")
 
         if option is not None :
             resultats_file_name = f"{self.data_modele}_epsilon={self.epsilon}_neurones={sum(self.n[1:self.K+1])}_taille={len(self.data)}_{option}_benchmark.csv"
@@ -303,7 +306,7 @@ class Certification_Problem(abc.ABC):
             json.dump(parametres_gurobi, dict_file, indent=4)
             #print(f"Dictionnaire des paramètres de gurobi enregistré dans : {dict_file_path_gurobi}")
 
-        print("cert resultats : ", cert.resultats)
+        # print("cert resultats : ", cert.resultats)
         # Enregistrement du fichier CSV de résultats
         if cert.resultats != []:
             print("Les resultats ne sont pas vides")
@@ -319,14 +322,14 @@ class Certification_Problem(abc.ABC):
 
 if __name__ == "__main__":
 
-    data_modele = "MNIST"
-    remove_folder_benchmark(data_modele)
+    data_modele = "BLOB"
+    #remove_folder_benchmark(data_modele)
 
-    architecture = "2x20"
-    epsilon = 5
+    architecture = None
+    epsilon = 3
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
-    Certification_Problem_.test()
+    Certification_Problem_.apply(verbose = False, coupes = ["zk2"])
     
     # x0, y0 = Certification_Problem_MNIST.data[0][0][0], Certification_Problem_MNIST.data[0][0][1]
     # print("x0 : ", x0)

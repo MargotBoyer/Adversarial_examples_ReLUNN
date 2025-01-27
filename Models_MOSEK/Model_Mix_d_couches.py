@@ -62,6 +62,7 @@ def solve_Mix_SDP_objbetas_couches(
     cert,
     coupes: Dict[str, bool], 
     titre : str,
+    derniere_couche_lineaire : bool = True,
     verbose : bool =True
 ):
     def streamprinter(text):
@@ -208,7 +209,7 @@ def solve_Mix_SDP_objbetas_couches(
 
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
-            task.writedata("Models_MOSEK/ptf/Model_Mix_d_couches.ptf")
+            task.writedata(os.path.join(os.getcwd(), "Models_MOSEK/ptf/Model_Mix_d_couches.ptf"))
             imprime_ptf(cert,task,"Mix_d_couches_SDP",titre,coupes)
 
             # Résoudre le problème

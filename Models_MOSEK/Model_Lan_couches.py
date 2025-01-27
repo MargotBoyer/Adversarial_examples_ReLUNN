@@ -152,7 +152,7 @@ def solve_Lan_couches(
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 
-            task.writedata("Models_MOSEK/ptf/Model_Lan_couches.ptf")
+            task.writedata(os.path.join(os.getcwd(), "Models_MOSEK/ptf/Model_Lan_couches.ptf"))
             imprime_ptf(cert,task,"Lan_couches_SDP",titre,coupes,ycible)
 
             # Résoudre le problème

@@ -139,7 +139,7 @@ def solve_Lan(
             # Configurer le solveur pour une optimisation
             task.putobjsense(mosek.objsense.minimize)
 
-            task.writedata("Models_MOSEK/ptf/Model_Lan.ptf")
+            task.writedata(os.path.join(os.getcwd(), "Models_MOSEK/ptf/Model_Lan.ptf"))
             imprime_ptf(cert,task,"Lan_SDP",titre,coupes,ycible=ycible)
 
             # Résoudre le problème

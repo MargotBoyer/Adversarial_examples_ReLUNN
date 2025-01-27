@@ -1,13 +1,16 @@
 import torch
 from typing import List
 import random
+from torchvision.datasets import MNIST
+import torchvision.transforms as transforms
+
 
 def load_data(data_modele : str, architecture : str = None):
     if data_modele == "MOON":
         data = torch.load('datasets/MOON/MOON_dataset.pt')
 
     elif data_modele == "BLOB":
-        data = torch.load('datasets/BLOB/BLOB_dataset.pt')
+        data = torch.load('datasets/BLOB/BLOB_noise=0.15__dataset.pt')
 
     elif data_modele == "MULTIPLE_BLOB":
         data = torch.load('datasets/MULTIPLE_BLOB/MULTIPLE_BLOB_dataset.pt')
@@ -23,11 +26,11 @@ def load_data(data_modele : str, architecture : str = None):
         data = torch.load('datasets/MULTIPLE_DIM_GAUSSIANS/MULTIPLE_DIM_GAUSSIANS_dataset.pt')
 
     elif data_modele == "MNIST" :
-        # transform = transforms.Compose([transforms.ToTensor())])
-        # train_dataset = MNIST(root='./data', train=True, download=True, transform=transform)
-        # test_dataset = MNIST(root='./data', train=False, download=True, transform=transform)
-        # data = [train_dataset, test_dataset]
-        data = torch.load('datasets/MNIST/critical_points_dataset_seuil=0.5.pt')
+        transform = transforms.Compose([transforms.ToTensor()])
+        train_dataset = MNIST(root='./data', train=True, download=True, transform=transform)
+        test_dataset = MNIST(root='./data', train=False, download=True, transform=transform)
+        data = [train_dataset, test_dataset]
+        # data = torch.load('datasets/MNIST/critical_points_dataset_seuil=0.5.pt')
     print("Data loaded !  \n ", data[0])
     return data
 

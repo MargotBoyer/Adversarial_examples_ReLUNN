@@ -9,7 +9,7 @@ import pickle
 
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.tree import DecisionTreeClassifier
-from comparaison_modeles_outils import retourne_weights, load_data
+from load import retourne_weights, load_data
 from reseau_train import Reseau, architectures_modele
 
 from typing import List

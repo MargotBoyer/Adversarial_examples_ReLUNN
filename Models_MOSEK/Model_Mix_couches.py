@@ -52,6 +52,7 @@ def solveMix_SDP_par_couches(
     cert,
     coupes: Dict[str, bool], 
     titre : str,
+    derniere_couche_lineaire : bool = True,
     verbose : bool =True
 ):
     with mosek.Env() as env:
@@ -157,7 +158,7 @@ def solveMix_SDP_par_couches(
             task.putobjsense(mosek.objsense.minimize)
 
             # Write the problem for human inspection
-            task.writedata("Models_MOSEK/ptf/Model_Mix_couches.ptf")
+            task.writedata(os.path.join(os.getcwd(),"Models_MOSEK/ptf/Model_Mix_couches.ptf"))
             imprime_ptf(cert,task,"Mix_couches_SDP",titre,coupes)
 
             # Résoudre le problème
