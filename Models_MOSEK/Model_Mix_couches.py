@@ -87,8 +87,12 @@ def solveMix_SDP_par_couches(
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
-            for k in range(cert.K):
-                task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
+            if derniere_couche_lineaire:
+                for k in range(cert.K):
+                    task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
+            else : 
+                for k in range(cert.K-1):
+                    task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
             task.appendbarvars([cert.n[cert.K]])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
@@ -108,7 +112,8 @@ def solveMix_SDP_par_couches(
                                                  neurones_inactifs_stables=cert.neurones_inactifs_stables)
 
             # ***** Contrainte 4 :   zK+1 == WK zK + bK *****
-            num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte, par_couches = True)
+            if derniere_couche_lineaire :
+                num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte, par_couches = True)
 
             # ***** Contrainte 5 :  u (1 - betaj) + zKj > zKj*  *****  
             num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = True)
@@ -133,7 +138,7 @@ def solveMix_SDP_par_couches(
 
             # Contrainte 11 : Assure la continuité entre les différents Pi
             # Pi+1[xi+1] = Pi[xi+1]
-            num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte)
+            num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte,derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("num contrainte fin des contraintes classiques : ", num_contrainte)
             # ***********************************************
@@ -143,13 +148,15 @@ def solveMix_SDP_par_couches(
             if coupes["zk2"]:
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte, 
                                                           par_couches = True, neurones_actifs_stables=cert.neurones_actifs_stables,
-                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables,
+                                                          derniere_couche_lineaire=derniere_couche_lineaire)
                 
             if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 num_contrainte = contrainte_Mc_Cormick_betai_betaj(task,cert.K, cert.n, cert.y0, num_contrainte, par_couches = True)
             if coupes["RLTLan"]:
-                num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U,num_contrainte, par_couches = True)
+                num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U,num_contrainte, 
+                                                par_couches = True, derniere_couche_lineaire=derniere_couche_lineaire)
 
                 #print("num contrainte apres RLT Lan : ", num_contrainte)
             #print("Nombre de contraintes : ", num_contrainte)

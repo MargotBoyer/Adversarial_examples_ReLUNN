@@ -99,9 +99,14 @@ def solve_Mix_SDP_objbetas_couches(
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
-            for k in range(cert.K-1):
-                task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
-            task.appendbarvars([1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1])
+            if derniere_couche_lineaire :
+                for k in range(cert.K-1):
+                    task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
+                task.appendbarvars([1 + cert.n[cert.K-1] + cert.n[cert.K] + cert.n[cert.K] - 1])
+            else : 
+                for k in range(cert.K-2):
+                    task.appendbarvars([1 + cert.n[k] + cert.n[k+1]])
+                task.appendbarvars([1 + cert.n[cert.K-2] + cert.n[cert.K-1] + cert.n[cert.K] - 1])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
 
@@ -121,7 +126,8 @@ def solve_Mix_SDP_objbetas_couches(
                 print("Nombre de contraintes après contrainte 1-2", num_contrainte)
 
             # ***** Contrainte 3 :   zK+1 == WK zK + bK *******************
-            num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte, par_couches= True)
+            if derniere_couche_lineaire :
+                num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte, par_couches= True)
             if verbose : 
                 print("Nombre de contraintes après contrainte 3", num_contrainte)
 
@@ -187,7 +193,8 @@ def solve_Mix_SDP_objbetas_couches(
             if coupes["zk2"]:
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte,
                                                           par_couches=True, neurones_actifs_stables=cert.neurones_actifs_stables,
-                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables,
+                                                          derniere_couche_lineaire=derniere_couche_lineaire)
 
             if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
@@ -195,7 +202,8 @@ def solve_Mix_SDP_objbetas_couches(
                 num_contrainte = contrainte_produit_betas_nuls_Adv2_Adv3(task, cert.K, cert.n, cert.y0, num_contrainte,par_couches=True)
 
             if coupes["RLTLan"]:
-                num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte,par_couches=True)
+                num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte,
+                                                par_couches=True, derniere_couche_lineaire=derniere_couche_lineaire)
 
             if coupes["betaizkj"]:
                 num_contrainte = contrainte_Mc_Cormick_betai_zkj(task, cert.K, cert.n, cert.y0, cert.U, num_contrainte, par_couches = True)

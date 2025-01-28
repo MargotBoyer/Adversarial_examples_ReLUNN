@@ -136,6 +136,7 @@ class Certification_Problem(abc.ABC):
         #                                "Lan_couches_SDP"]
 
         optimizations_models_tester =["Fischetti_Obj_diff", "Mix_d_SDP", "Mix_d_couches_SDP","Lan_SDP", "Lan_couches_SDP",  "Mix_SDP","Mix_couches_SDP"]
+        optimizations_models_tester =["Fischetti_Obj_diff","Mix_SDP"]
         
         print("n : ", self.n)
         for i in range(len(self.W)):
@@ -170,7 +171,8 @@ class Certification_Problem(abc.ABC):
                 if (not os.path.exists(model_dir)) and (optimization_model in optimization_models_mosek):
                     print(f"Création du dossier : {model_dir}")
                     os.makedirs(model_dir)
-                cert.apply(optimization_model, parametres_reseau, parametres_optimisation, titre = self.nom, coupes = coupes, verbose = verbose)
+                cert.apply(optimization_model, parametres_reseau, parametres_optimisation, titre = self.nom, 
+                           derniere_couche_lineaire= True, coupes = coupes, verbose = verbose)
                 self.update_folder_benchmark_(parametres_reseau, parametres_optimisation, parametres_gurobi, cert, just_change_bench_csv = True, option = "")
                 #print(f"Resultats pour l'instant pour le probleme de certification sur la donnee numero {ind_x0} : ", cert.resultats)
             self.resultats.extend(cert.resultats)
@@ -200,7 +202,7 @@ class Certification_Problem(abc.ABC):
         
         print("n ", self.n)
         #optimizations_models_tester  = ["Lan_SDP", "Lan_couches_SDP", "Mix_d_SDP", "Mix_d_couches_SDP", "Mix_SDP", "Mix_couches_SDP", "FprG_SDP"]
-        optimizations_models_tester  = ["Lan_couches_SDP"]
+        optimizations_models_tester  = ["Mix_SDP"]
 
         for ind_x0 in range(len(self.data)):
             x0, y0 = self.data[ind_x0]
@@ -326,7 +328,7 @@ if __name__ == "__main__":
     #remove_folder_benchmark(data_modele)
 
     architecture = None
-    epsilon = 3
+    epsilon = 5
     Certification_Problem_ = Certification_Problem(data_modele, architecture, epsilon, nb_samples=1)
     print("Data : ", Certification_Problem_.data)
     Certification_Problem_.apply(verbose = False, coupes = ["zk2"])

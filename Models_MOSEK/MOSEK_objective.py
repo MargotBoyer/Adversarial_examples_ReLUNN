@@ -9,22 +9,37 @@ def objective_function_diff(
         task : mosek.Task,
         K: int,
         n : List[int],
+        W : List[List[List[float]]],
         ytrue : int,
-        numvar : int):
+        numvar : int,
+        derniere_couche_lineaire : bool = True):
     # Fonction objectif : zK_ytrue - somme(zK_y pour tous y != ytrue)
     for i in range(numvar):
         task.putcj(i, 0)
     # Partie SDP de la fonction objectif
-    idx_last_layer = return_i_from_k_j__variable_z(K, 0, n)
-    task.putbarcblocktriplet(
-        [0] * n[K],  
-        [idx_last_layer + ytrue]
-        + [
-            (idx_last_layer + i) for i in range(n[K]) if i != ytrue
-        ], 
-        [0] * n[K],
-        [1 / 2] + [-1 / 2] * (n[K] - 1),
-            )
+    if derniere_couche_lineaire :
+        idx_last_layer = return_i_from_k_j__variable_z(K, 0, n)
+        task.putbarcblocktriplet(
+            [0] * n[K],  
+            [idx_last_layer + ytrue]
+            + [
+                (idx_last_layer + i) for i in range(n[K]) if i != ytrue
+            ], 
+            [0] * n[K],
+            [1 / 2] + [-1 / 2] * (n[K] - 1),
+                )
+    else :
+        idx = return_i_from_k_j__variable_z(K-1, 0, n)
+        poids_W = []
+        for j in range(n[K]) :
+            if j!=ytrue:
+                poids_W.extend([(-W[j][i] / 2) for i in range(n[K-1])] )
+        task.putbarcblocktriplet(
+            [0] * n[K] * n[K-1],  
+            [(idx + i) for i in range(n[K-1])] * n[K], 
+            [0] * n[K] * n[K-1],
+            [(W[ytrue][i] / 2) for i in range(n[K-1])] + poids_W,
+                )
     
 
 def objective_function_diff_ycible(
@@ -75,16 +90,18 @@ def objective_function_diff_betas(
         task : mosek.Task,
         K : int,
         n : List[int],
+        W : List[List[List[float]]],
         ytrue : int,
         numvar : int,
         sigmas : bool = False, 
-        par_couches : bool = False):
+        par_couches : bool = False,
+        derniere_couche_lineaire : bool = True):
     # Fonction objectif : zK_ytrue - somme(zK_y * Beta_y pour tous y != ytrue)
     for i in range(numvar):
         task.putcj(i, 0)
     # Partie SDP de la fonction objectif
     
-    if par_couches : 
+    if par_couches and derniere_couche_lineaire: 
         task.putbarcblocktriplet(
             [K-1] * n[K],  
             [1 + n[K-1] + ytrue] + [(n[K-1] + n[K] + return_good_j_beta(i, ytrue)) for i in range(n[K]) if i != ytrue],
@@ -92,7 +109,7 @@ def objective_function_diff_betas(
             [1 / 2] + [-1 / 2] * (n[K] - 1),
                 )
 
-    else : 
+    elif not par_couches and derniere_couche_lineaire : 
         idx_last_layer = return_i_from_k_j__variable_z(K, 0, n)
         if sigmas : 
             task.putbarcblocktriplet(
@@ -108,6 +125,29 @@ def objective_function_diff_betas(
                 [0]+ [(idx_last_layer + i) for i in range(n[K]) if i != ytrue], 
                 [1 / 2] + [-1 / 2] * (n[K] - 1),
                     )
+            
+    elif not par_couches and not derniere_couche_lineaire : 
+        
+        poids_Wytrue = [(W[ytrue][i] / 2) for i in range(n[K-1])]
+        poids_W = []
+        for j in range(n[K]) :
+            if j!=ytrue:
+                poids_W.extend([(-W[j][i] / 2) for i in range(n[K-1])] )
+        
+        if sigmas : 
+            task.putbarcblocktriplet(
+                [0] * n[K] * n[K-1],  
+                [(1+sum(n[:K])+sum(n[1:K])+j) for j in range(n[K-1])] * n[K],
+                [0] * n[K] * n[K-1], 
+                poids_Wytrue + poids_W,
+                    )
+        else : 
+            task.putbarcblocktriplet(
+                [0] * n[K] * n[K-1],  
+                [(1+sum(n[:K])+j) for j in range(n[K-1])] * n[K],
+                [0] * n[K] * n[K-1], 
+                poids_Wytrue + poids_W,
+                    )
 
 
 def objective_function_diff_par_couches(
@@ -115,17 +155,28 @@ def objective_function_diff_par_couches(
         K : int,
         n : List[int],
         ytrue : int,
-        numvar : int):
+        numvar : int,
+        derniere_couche_lineaire : bool = True):
     # Fonction objectif :  zK_ytrue - somme(zK_y pour tous y != ytrue)
     for i in range(numvar):
         task.putcj(i, 0)
     # Partie SDP de la fonction objectif
-    task.putbarcblocktriplet(
-        [K - 1] * n[K],  
-        [1 + n[K-1] +ytrue]
-        + [
-            (1 + n[K-1] + i) for i in range(n[K]) if i != ytrue
-        ], 
-        [0] *n[K],
-        [1 / 2] + [-1 / 2] * (n[K] - 1),
-        )
+    if derniere_couche_lineaire :
+        task.putbarcblocktriplet(
+            [K - 1] * n[K],  
+            [1 + n[K-1] +ytrue]
+            + [
+                (1 + n[K-1] + i) for i in range(n[K]) if i != ytrue
+            ], 
+            [0] *n[K],
+            [1 / 2] + [-1 / 2] * (n[K] - 1),
+            )
+    else : 
+        poids_Wytrue = [(W[ytrue][i] / 2) for i in range(n[K-1])]
+        poids_W = []
+        task.putbarcblocktriplet(
+            [K - 2] * n[K-1] * n[K],  
+            [(1+n[K-2]+j) for j in range(n[K-1])] * n[K],
+            [0] * n[K-1] * n[K],
+            poids_Wytrue + poids_W,
+            )

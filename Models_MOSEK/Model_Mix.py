@@ -53,8 +53,8 @@ def solveMix_SDP(
     cert,
     coupes: Dict[str, bool], 
     titre : str,
-    derniere_couche_lineaire : bool = True,
-    verbose : bool =True
+    derniere_couche_lineaire : bool = False,
+    verbose : bool = True
 ):
     with mosek.Env() as env:
         with env.Task() as task:
@@ -89,7 +89,10 @@ def solveMix_SDP(
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
-            task.appendbarvars([sum(cert.n) + 1])
+            if derniere_couche_lineaire :
+                task.appendbarvars([sum(cert.n) + 1])
+            else :
+                task.appendbarvars([sum(cert.n[:cert.K]) + 1])
             task.appendbarvars([cert.n[cert.K]])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
@@ -108,7 +111,8 @@ def solveMix_SDP(
                                                  neurones_inactifs_stables = cert.neurones_inactifs_stables)
 
             # ***** Contrainte 4 :   zK+1 == WK zK + bK *****
-            num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte)
+            if derniere_couche_lineaire :
+                num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte)
 
             # ***** Contrainte 5 :  u (1 - betaj) + zKj > zKj*  *****  
             num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte)
@@ -138,7 +142,8 @@ def solveMix_SDP(
             if coupes["zk2"]:
                 num_contrainte = contrainte_McCormick_zk2(task, cert.K, cert.n, cert.x0, cert.U, cert.L, cert.epsilon, num_contrainte,
                                                           par_couches=False, neurones_actifs_stables=cert.neurones_inactifs_stables,
-                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables)
+                                                          neurones_inactifs_stables=cert.neurones_inactifs_stables,
+                                                          derniere_couche_lineaire=derniere_couche_lineaire)
                 if verbose :
                     print("num contrainte apres zk2 : ", num_contrainte)
             if coupes["betaibetaj"]:
