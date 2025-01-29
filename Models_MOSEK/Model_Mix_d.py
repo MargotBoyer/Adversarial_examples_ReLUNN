@@ -98,12 +98,15 @@ def solveMix_SDP_objbetas(
             task.appendcons(numcon)
 
             # Ajout des variables semi-définies du problème : ici la matrice représentant les z et celle des betas
-            task.appendbarvars([sum(cert.n) + cert.n[cert.K]])
+            if derniere_couche_lineaire :
+                task.appendbarvars([sum(cert.n) + cert.n[cert.K]])
+            else : 
+                task.appendbarvars([sum(cert.n[:cert.K]) + cert.n[cert.K]])
             # Ajout des variables "indépendantes" de la matrice sdp (ici 0 variable)
             task.appendvars(numvar)
 
             # ------------ FONCTION OBJECTIF ------------------------------------
-            objective_function_diff_betas(task,cert.K,cert.n,cert.y0,numvar)
+            objective_function_diff_betas(task,cert.K,cert.n,cert.W,cert.y0,numvar,derniere_couche_lineaire=derniere_couche_lineaire)
             # --------------------------------------------------------------------
 
             # ------------ CONTRAINTES RELU  ------------------------------------
@@ -118,36 +121,38 @@ def solveMix_SDP_objbetas(
                 print("Nombre de contraintes après contrainte 1-2", num_contrainte)
 
             # ***** Contrainte 3 :   zK+1 == WK zK + bK *******************
-            num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte)
+            if derniere_couche_lineaire :
+                num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes après contrainte 3", num_contrainte)
 
             # ***** Contrainte 4 : somme(betaj) = 1 ***********************
             num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,cert.K,cert.n,cert.y0,num_contrainte, 
-                                                                           par_couches=False, betas_z_unis=True)
+                                                                           par_couches=False, betas_z_unis=True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 4", num_contrainte)
 
             # ***** Contrainte 5 : betaj zj >= betaj zjtrue **************
-            num_contrainte = contrainte_exemple_adverse_beta_produit_simple(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte)
+            num_contrainte = contrainte_exemple_adverse_beta_produit_simple(task,cert.K,cert.n,cert.W,cert.y0,cert.U,cert.rho,num_contrainte,
+                                                                            derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 5", num_contrainte)
 
             # ***** Contrainte 6 :   betaj == 0 ou betaj ==1  *************
             num_contrainte = contrainte_beta_discret(task,cert.K,cert.n,cert.y0,num_contrainte, 
-                                                     par_couches = False, betas_z_unis = True)
+                                                     par_couches = False, betas_z_unis = True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose: 
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
             num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,num_contrainte,
-                                                    par_couches = False, betas_z_unis= True)
+                                                    par_couches = False, betas_z_unis= True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7", num_contrainte)
 
             # ***** Contrainte 7bis : 0 <= betaj zK_j <= U betaj, 0 <= betaj zK_j <= zK_j
-            num_contrainte = contrainte_borne_betas_unis(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
-                                                         par_couches= False)
+            num_contrainte = contrainte_borne_betas_unis(task,cert.K,cert.n,cert.W,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
+                                                         par_couches= False,derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7bis", num_contrainte)
             
@@ -165,7 +170,7 @@ def solveMix_SDP_objbetas(
                 print("Nombre de contraintes après contrainte 9", num_contrainte)
 
             # Contrainte : somme(betaj zKj) <= max(U[K]) **************************
-            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,par_couches=False)
+            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,par_couches=False,derniere_couche_lineaire=derniere_couche_lineaire)
            
             # Contrainte 10 : X00 = 1 (Le premier terme de la matrice variable est 1)
             num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,1,num_contrainte)

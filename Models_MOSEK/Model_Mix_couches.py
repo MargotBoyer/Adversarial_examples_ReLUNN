@@ -98,7 +98,7 @@ def solveMix_SDP_par_couches(
             task.appendvars(numvar)
 
             # ------------ FONCTION OBJECTIF ------------------------------------
-            objective_function_diff_par_couches(task,cert.K,cert.n,cert.y0,numvar)
+            objective_function_diff_par_couches(task,cert.K,cert.n,cert.W,cert.y0,numvar,derniere_couche_lineaire=derniere_couche_lineaire)
             # --------------------------------------------------------------------
 
             # ------------ CONTRAINTES RELU  ------------------------------------
@@ -116,14 +116,15 @@ def solveMix_SDP_par_couches(
                 num_contrainte = contrainte_derniere_couche_lineaire(task,cert.K,cert.n,cert.W,cert.b,num_contrainte, par_couches = True)
 
             # ***** Contrainte 5 :  u (1 - betaj) + zKj > zKj*  *****  
-            num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = True)
+            num_contrainte = contrainte_exemple_adverse_beta_u(task,cert.K,cert.n,cert.W,cert.y0,cert.U,cert.rho,num_contrainte, 
+                                                               par_couches = True, derniere_couche_lineaire=derniere_couche_lineaire)
             # ***** Contrainte 6 : somme(betaj) > 1 *****************
             num_contrainte = contrainte_exemple_adverse_somme_beta_superieure_1(
-                task,cert.K,cert.n,cert.y0,num_contrainte, par_couches= True, betas_z_unis= False
+                task,cert.K,cert.n,cert.y0,num_contrainte, par_couches= True, betas_z_unis= False, derniere_couche_lineaire=derniere_couche_lineaire
             )
             # ***** Contrainte 7 :   betaj == 0 ou betaj ==1  *****
             num_contrainte = contrainte_beta_discret(task,cert.K,cert.n,cert.y0,num_contrainte, 
-                                                     par_couches = True, betas_z_unis= False)
+                                                     par_couches = True, betas_z_unis= False, derniere_couche_lineaire=derniere_couche_lineaire)
 
             # ***** Contrainte 8 :   Bornes sur les zkj hidden layers   *****
             #num_contrainte = contrainte_borne_couches_internes(task,K,n,U,num_contrainte,par_couches = True)
@@ -133,9 +134,10 @@ def solveMix_SDP_par_couches(
             num_contrainte = contrainte_boule_initiale(task,cert.n,cert.x0,cert.epsilon,cert.U,cert.L,num_contrainte)
 
             # Contrainte 10 : X00 = 1 (Le premier terme de la matrice variable est 1)
-            
-            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K+1,num_contrainte)
-
+            if derniere_couche_lineaire:
+                num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K+1,num_contrainte)
+            else : 
+                num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K,num_contrainte)
             # Contrainte 11 : Assure la continuité entre les différents Pi
             # Pi+1[xi+1] = Pi[xi+1]
             num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte,derniere_couche_lineaire=derniere_couche_lineaire)
@@ -186,7 +188,10 @@ def solveMix_SDP_par_couches(
             if solsta == solsta.optimal:
                 # Assuming the optimization succeeded read solution
                 z_sol = task.getbarxj(mosek.soltype.itr, 0)
-                beta_sol = task.getbarxj(mosek.soltype.itr, cert.K)
+                if derniere_couche_lineaire:
+                    beta_sol = task.getbarxj(mosek.soltype.itr, cert.K)
+                else : 
+                    beta_sol = task.getbarxj(mosek.soltype.itr, cert.K-1)
 
                 z_0 = reconstitue_matrice(1 + cert.n[0] + cert.n[1], z_sol)
                 if cert.data_modele != "MNIST" :   

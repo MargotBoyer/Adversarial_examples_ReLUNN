@@ -1,0 +1,32 @@
+{
+    "parametres_gurobi": {
+        "FeasibilityTol": 0.01,
+        "NumericFocus": 3,
+        "Aggregate": null,
+        "NonConvex": null,
+        "Presolve": null,
+        "TimeLimit": 60,
+        "MinRelNodes": null,
+        "PumpPasses": null,
+        "BarConvTol": null,
+        "ImproveStartTime": null,
+        "MIPFocus": null,
+        "StartNodeLimit": null,
+        "Heuristics": null,
+        "Method": null,
+        "DualReduction": 0
+    },
+    "rho": 0.01,
+    "epsilon": 5,
+    "epsilon_adv": 0.01,
+    "verbose": false,
+    "coupes": {
+        "zk2": false,
+        "RLTLan": false,
+        "betaibetaj": false,
+        "sigmakzk": false,
+        "betaizkj": false,
+        "bornes_betaz": false
+    },
+    "relax": false
+}

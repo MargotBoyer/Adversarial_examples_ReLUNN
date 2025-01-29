@@ -111,7 +111,8 @@ def solve_Mix_SDP_objbetas_couches(
             task.appendvars(numvar)
 
             # ------------ FONCTION OBJECTIF ------------------------------------
-            objective_function_diff_betas(task,cert.K,cert.n,cert.y0,numvar,par_couches=True)
+            objective_function_diff_betas(task,cert.K,cert.n,cert.W,cert.y0,numvar,par_couches=True,
+                                          derniere_couche_lineaire=derniere_couche_lineaire)
             # --------------------------------------------------------------------
 
             # ------------ CONTRAINTES RELU  ------------------------------------
@@ -133,30 +134,31 @@ def solve_Mix_SDP_objbetas_couches(
 
             # ***** Contrainte 4 : somme(betaj) = 1 ***********************
             num_contrainte = contrainte_exemple_adverse_somme_beta_egale_1(task,cert.K,cert.n,cert.y0,num_contrainte, 
-                                                                      par_couches=True, betas_z_unis=True)
+                                                                      par_couches=True, betas_z_unis=True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose: 
                 print("Nombre de contraintes après contrainte 4", num_contrainte)
 
             # ***** Contrainte 5 : betaj zj >= betaj zjtrue **************
-            num_contrainte = contrainte_exemple_adverse_beta_produit_simple(task,cert.K,cert.n,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = True)
+            num_contrainte = contrainte_exemple_adverse_beta_produit_simple(task,cert.K,cert.n,cert.W,cert.y0,cert.U,cert.rho,num_contrainte, par_couches = True,
+                                                                            derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 5", num_contrainte)
 
             # ***** Contrainte 6 :   betaj == 0 ou betaj ==1  *************
             num_contrainte = contrainte_beta_discret(task,cert.K,cert.n,cert.y0,num_contrainte, 
-                                                     par_couches = True, betas_z_unis = True)
+                                                     par_couches = True, betas_z_unis = True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 6", num_contrainte)
 
             # ***** Contrainte 7 :  0 <= betaj <= 1 ***************************
             num_contrainte = contrainte_borne_betas(task,cert.K,cert.n,cert.y0,num_contrainte, sigmas = False,
-                                                    par_couches = True, betas_z_unis= True)
+                                                    par_couches = True, betas_z_unis= True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7", num_contrainte)
 
             # ***** Contrainte 7bis : 0 <= betaj zK_j <= U betaj, 0 <= betaj zK_j <= zK_j
-            num_contrainte = contrainte_borne_betas_unis(task,cert.K,cert.n,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
-                                                         par_couches= True)
+            num_contrainte = contrainte_borne_betas_unis(task,cert.K,cert.n,cert.W,cert.y0,cert.U,cert.L,cert.rho,num_contrainte,
+                                                         par_couches= True, derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 7bis", num_contrainte)
             
@@ -174,15 +176,20 @@ def solve_Mix_SDP_objbetas_couches(
                 print("Nombre de contraintes après contrainte 9", num_contrainte)
 
             # ***** Contrainte : somme(betaj zKj) <= max(U[K]) **************************
-            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.y0,cert.U,num_contrainte,sigmas = False, par_couches=True)
+            num_contrainte = contrainte_borne_somme_betaz(task,cert.K,cert.n,cert.W,cert.y0,cert.U,num_contrainte,
+                                                          sigmas = False, par_couches=True, derniere_couche_lineaire=derniere_couche_lineaire)
            
             # ***** Contrainte 10 : Pk[zk+1] == Pk+1[zk+1] ****************************
-            num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte)
+            num_contrainte = contrainte_recurrence_matrices_couches(task,cert.K,cert.n,num_contrainte,
+                                                                    derniere_couche_lineaire=derniere_couche_lineaire)
             if verbose : 
                 print("Nombre de contraintes après contrainte 10", num_contrainte)
 
             # Contrainte 11 : X00 = 1 (Le premier terme de la matrice variable est 1)
-            num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K,num_contrainte)
+            if derniere_couche_lineaire :
+                num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K,num_contrainte)
+            else :
+                num_contrainte = contrainte_premier_terme_egal_a_1(task,cert.K,cert.K-1,num_contrainte)
             if verbose : 
                 print("Nombre de contraintes après contrainte 11", num_contrainte)
             
@@ -199,7 +206,8 @@ def solve_Mix_SDP_objbetas_couches(
             if coupes["betaibetaj"]:
                 # Contrainte 12 : Linearisation de Fortet sur les betas
                 # num_contrainte = contrainte_Mc_Cormick_betai_betaj_unis(task,K,n,ytrue,num_contrainte)
-                num_contrainte = contrainte_produit_betas_nuls_Adv2_Adv3(task, cert.K, cert.n, cert.y0, num_contrainte,par_couches=True)
+                num_contrainte = contrainte_produit_betas_nuls_Adv2_Adv3(task, cert.K, cert.n, cert.y0, num_contrainte,
+                                                                         par_couches=True, derniere_couche_lineaire=derniere_couche_lineaire)
 
             if coupes["RLTLan"]:
                 num_contrainte = coupes_RLT_LAN(task, cert.K, cert.n, cert.W, cert.b, cert.x0, cert.epsilon, cert.L, cert.U, num_contrainte,

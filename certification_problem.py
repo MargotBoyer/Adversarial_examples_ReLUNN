@@ -136,7 +136,7 @@ class Certification_Problem(abc.ABC):
         #                                "Lan_couches_SDP"]
 
         optimizations_models_tester =["Fischetti_Obj_diff", "Mix_d_SDP", "Mix_d_couches_SDP","Lan_SDP", "Lan_couches_SDP",  "Mix_SDP","Mix_couches_SDP"]
-        optimizations_models_tester =["Fischetti_Obj_diff","Mix_SDP"]
+        optimizations_models_tester =["Fischetti_Obj_diff","Mix_d_couches_SDP"]
         
         print("n : ", self.n)
         for i in range(len(self.W)):
